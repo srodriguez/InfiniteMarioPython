@@ -37,9 +37,9 @@ public class AccessTest {
 
 
     /** reflection factory for forcing default constructors */
-    private static final ReflectionFactory reflFactory = (ReflectionFactory)
-            AccessController.doPrivileged(
-                    new ReflectionFactory.GetReflectionFactoryAction());
+    //private static final ReflectionFactory reflFactory = (ReflectionFactory)
+    //        AccessController.doPrivileged(
+    //                new ReflectionFactory.GetReflectionFactoryAction());
 
 
     public static class Sub extends Super {
@@ -81,10 +81,11 @@ public class AccessTest {
      */
     private static Constructor forceDefaultConstructor(Class cl) throws Exception {
         Constructor cons = Object.class.getDeclaredConstructor(new Class[0]);
-        cons = reflFactory.newConstructorForSerialization(cl, cons);
-        cons.setAccessible(true);
-        System.out.println("Cons: " + cons);
-        return cons;
+        //cons = reflFactory.newConstructorForSerialization(cl, cons);
+        //cons.setAccessible(true);
+        //System.out.println("Cons: " + cons);
+        //return cons;
+        return null;
     }
 
     private static Constructor getSerializableConstructorOld(Class cl) {
@@ -103,10 +104,11 @@ public class AccessTest {
 //                    !packageEquals(cl, initCl))) {
 //                return null;
 //            }
-            cons = reflFactory.newConstructorForSerialization(cl, cons);
-            cons.setAccessible(true);
-            System.out.println("Cons: " + cons);
-            return cons;
+            //cons = reflFactory.newConstructorForSerialization(cl, cons);
+            //cons.setAccessible(true);
+            //System.out.println("Cons: " + cons);
+            //return cons;
+            return null;
         } catch (NoSuchMethodException ex) {
             System.out.println("Ex: " + ex);
             return null;
