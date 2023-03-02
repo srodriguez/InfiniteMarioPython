@@ -2,6 +2,9 @@
 
 Steps to get running:
 * Download this repo.
+* Install Eclipse. I've tested the instructions with this version:
+<img src="doc/eclipse_version.png" width="450" height="260" />
+
 * Open the project in Eclipse via File -> Open Projects from File System...
 * Run the server from Eclipse by specifying '-server on' in the program arguments. One issue I had is that the default working directory (in the second screenshot below) was somehow set incorrectly. Overriding it by clicking *Other* and specifying the "classes" subdirectory solved the problem.
 
