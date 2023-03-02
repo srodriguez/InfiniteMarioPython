@@ -5,7 +5,7 @@ Steps to get running:
 * Install Eclipse. I've tested the instructions with this version:
 <img src="doc/eclipse_version.png" width="450" height="260" />
 
-* Open the project in Eclipse via File -> Open Projects from File System...
+* Open the project in Eclipse via File -> Open Projects from File System... Just select the main folder (InfiniteMarioPython), not the 'src' subdirectory or anything else.
 * Run the server from Eclipse by specifying '-server on' in the program arguments. One issue I had is that the default working directory (in the second screenshot below) was somehow set incorrectly. Overriding it by clicking *Other* and specifying the "classes" subdirectory solved the problem.
 
 <img src="doc/run_config_1.png" width="800" height="377" />
