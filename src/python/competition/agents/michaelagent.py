@@ -45,6 +45,9 @@ class MichaelAgent(MarioAgent):
         self.action = numpy.zeros(5, int)
         self.action[1] = 1
         self.actionStr = ""
+        
+        self.actionRepeat = 4
+        self.stepsSinceNewAction = self.actionRepeat
 
         self.actions = []
         for i in range(0, 2):
@@ -72,7 +75,7 @@ class MichaelAgent(MarioAgent):
         agent_params["frame_pooling_style"] = "max_pool" # color_averaging, max_pool
 
         # Optimizer settings
-        agent_params["optimizer"] = "rms_prop" # "rms_prop", "adam"
+        agent_params["optimizer"] = "adam" # "rms_prop", "adam"
 
         agent_params["rms_prop_lr"] = 0.00025
         agent_params["rms_prop_alpha"] = 0.95
@@ -95,13 +98,13 @@ class MichaelAgent(MarioAgent):
         agent_params["hist_len"] = 4
         agent_params["downsample_w"] = 22 # 84
         agent_params["downsample_h"] = 22 # 84
-        agent_params["max_reward"] = 1.0 # Use float("inf") for no clipping
-        agent_params["min_reward"] = -1.0 # Use float("-inf") for no clipping
+        agent_params["max_reward"] = 10.0 # Use float("inf") for no clipping
+        agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
         agent_params["ep_start"] = 0.5 # 1
         agent_params["ep_end"] = 0.1
-        agent_params["ep_endt"] = 1000000
+        agent_params["ep_endt"] = 50000 # 1000000
         agent_params["discount"] = 0.99
-        agent_params["learn_start"] = 800 # 50000
+        agent_params["learn_start"] = 1000 # 50000
         agent_params["update_freq"] = 4
         agent_params["n_replay"] = 1
         agent_params["minibatch_size"] = 32
@@ -124,8 +127,13 @@ class MichaelAgent(MarioAgent):
     def getAction(self):
         """ Possible analysis of current observation and sending an action back
         """
-        a_idx = self.q_learner.perceive(self.lastReward, self.levelScene, self.isEpisodeOver, self.isEpisodeOver)
-        self.action = self.actions[a_idx]
+        self.stepsSinceNewAction += 1
+        if self.stepsSinceNewAction >= self.actionRepeat:
+            roughly_scaled_obs = (self.levelScene + 50.0) / 100.0
+            a_idx = self.q_learner.perceive(self.lastReward, roughly_scaled_obs, self.isEpisodeOver, self.isEpisodeOver)
+            self.action = self.actions[a_idx]
+            self.stepsSinceNewAction = 0
+            
         return self.action
         
 

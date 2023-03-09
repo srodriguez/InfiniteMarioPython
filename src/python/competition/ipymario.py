@@ -19,7 +19,7 @@ def main():
     task = MarioTask(agent.name, initMarioMode = 2)
     exp = EpisodicExperiment(task, agent)
     print 'Task Ready'
-    exp.doEpisodes(1000)
+    exp.doEpisodes(999999)
     print 'mm 2:', task.reward
 
     
