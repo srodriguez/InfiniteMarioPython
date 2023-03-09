@@ -15,12 +15,11 @@ from agents.michaelagent import MichaelAgent
 # send creatures.
 
 def main():
-    print 'I am actually being used!'
     agent = MichaelAgent()
     task = MarioTask(agent.name, initMarioMode = 2)
     exp = EpisodicExperiment(task, agent)
     print 'Task Ready'
-    exp.doEpisodes(2)
+    exp.doEpisodes(1000)
     print 'mm 2:', task.reward
 
     

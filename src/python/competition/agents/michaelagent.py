@@ -1,5 +1,10 @@
 import numpy
 import random
+import sys
+import os
+import torch
+import torch.nn as nn
+from neural_q_learner import NeuralQLearner
 __author__ = "Sergey Karakovskiy, sergey at idsia fullstop ch"
 __date__ = "$May 1, 2009 2:46:34 AM$"
 
@@ -28,105 +33,99 @@ class MichaelAgent(MarioAgent):
         self.isEpisodeOver = False
         self.trueJumpCounter = 0;
         self.trueSpeedCounter = 0;
+        self.cumulativeReward = 0
+        self.lastReward = 0
         
+
     def __init__(self):
         """Constructor"""
+        self.use_gpu = False
         self.trueJumpCounter = 0
         self.trueSpeedCounter = 0
         self.action = numpy.zeros(5, int)
         self.action[1] = 1
         self.actionStr = ""
-        
-    def _dangerOfGap(self):
-        for x in range(9, 13):
-            f = True
-            for y in range(12, 22):
-                if  (self.levelScene[y, x] != 0):
-                    f = False
-            if (f and self.levelScene[12, 11] != 0):
-                return True
-        return False
 
+        self.actions = []
+        for i in range(0, 2):
+            for j in range(0, 2):
+                for k in range(0, 2):
+                    for l in range(0, 2):
+                        for m in range(0, 2):
+                            self.actions.append([i, j, k, l, m])
 
-    def _a2(self):
-        """ Interesting, sometimes very useful behaviour which might prevent falling down into a gap!
-        Just substitue getAction by this method and see how it behaves.
-        """
-        if (self.mayMarioJump):
-                    print "m: %d, %s, %s, 12: %d, 13: %d, j: %d" \
-            % (self.levelScene[11, 11], self.mayMarioJump, self.isMarioOnGround, \
-            self.levelScene[11, 12], self.levelScene[11, 12], self.trueJumpCounter)
-        else:
-            if self.levelScene == None:
-                print "Bad news....."
-            print "m: %d, 12: %d, 13: %d, j: %d" \
-                % (self.levelScene[11, 11], \
-                self.levelScene[11, 12], self.levelScene[11, 12], self.trueJumpCounter)
+        self.device = torch.device("cuda" if self.use_gpu else "cpu")
+        #self.fc1 = nn.Linear(in_features=484, out_features=100).to(self.device)
+        #self.fc2 = nn.Linear(in_features=100, out_features=len(self.actions)).to(self.device)
 
-        a = numpy.zeros(5, int)
-        a[1] = 1
+        self.reset()
 
-        danger = self._dangerOfGap()
-        if (self.levelScene[11, 12] != 0 or \
-            self.levelScene[11, 13] != 0 or danger):
-            if (self.mayMarioJump or \
-                (not self.isMarioOnGround and a[self.KEY_JUMP] == 1)):
-                a[self.KEY_JUMP] = 1
-            self.trueJumpCounter += 1
-        else:
-            a[self.KEY_JUMP] = 0;
-            self.trueJumpCounter = 0
+        #####################
+        #### AGENT SETUP ####
+        #####################
 
-        if (self.trueJumpCounter > 16):
-            self.trueJumpCounter = 0
-            self.action[self.KEY_JUMP] = 0;
+        print 'Started setting up the agent...'
+        agent_params = {}
 
-        a[self.KEY_SPEED] = danger
+        agent_params["agent_type"] = "dqn"
 
-        actionStr = ""
+        agent_params["frame_pooling_style"] = "max_pool" # color_averaging, max_pool
 
-        for i in range(5):
-            if a[i] == 1:
-                actionStr += '1'
-            elif a[i] == 0:
-                actionStr += '0'
-            else:
-                print "something very dangerous happen...."
+        # Optimizer settings
+        agent_params["optimizer"] = "rms_prop" # "rms_prop", "adam"
 
-        actionStr += "\r\n"
-        print "action: " , actionStr
-        return actionStr
+        agent_params["rms_prop_lr"] = 0.00025
+        agent_params["rms_prop_alpha"] = 0.95
+        agent_params["rms_prop_eps"] = 0.1 / 32.0 # Note: The way epsilon is expressed in the Nature paper (= 0.1) doesn't follow convention because in the code they don't divide the loss by the batch size.
+
+        agent_params["adam_lr"] = 0.0000625
+        agent_params["adam_eps"] = 0.00015
+        agent_params["adam_beta1"] = 0.9
+        agent_params["adam_beta2"] = 0.999
+
+        agent_params["log_dir"] = os.path.dirname(os.path.realpath(__file__))
+        agent_params["log_dir"] = agent_params["log_dir"] + '/results/' + agent_params["agent_type"] + "/"
+        if not os.path.exists(agent_params["log_dir"]):
+            os.makedirs(agent_params["log_dir"])
+    
+        agent_params["show_extra_plots"] = False
+        agent_params["gpu"] = 0 if self.use_gpu else -1
+        agent_params["n_actions"] = len(self.actions)
+        agent_params["use_rgb_for_raw_state"] = False
+        agent_params["hist_len"] = 4
+        agent_params["downsample_w"] = 22 # 84
+        agent_params["downsample_h"] = 22 # 84
+        agent_params["max_reward"] = 1.0 # Use float("inf") for no clipping
+        agent_params["min_reward"] = -1.0 # Use float("-inf") for no clipping
+        agent_params["ep_start"] = 0.5 # 1
+        agent_params["ep_end"] = 0.1
+        agent_params["ep_endt"] = 1000000
+        agent_params["discount"] = 0.99
+        agent_params["learn_start"] = 800 # 50000
+        agent_params["update_freq"] = 4
+        agent_params["n_replay"] = 1
+        agent_params["minibatch_size"] = 32
+        agent_params["target_refresh_steps"] = 10000
+        agent_params["show_graphs"] = True
+        agent_params["graph_save_freq"] = 1000
+
+        # For training methods that require the Monte Carlo return for each episode, set the below to True.
+        agent_params["mc_return_required"] = False
+
+        transition_params = {}
+        transition_params["agent_params"] = agent_params
+        transition_params["replay_size"] = 1000000
+        transition_params["hist_spacing"] = 1
+        transition_params["bufferSize"] = 512
+
+        self.q_learner = NeuralQLearner(agent_params, transition_params)
+
 
     def getAction(self):
         """ Possible analysis of current observation and sending an action back
         """
-#        print "M: mayJump: %s, onGround: %s, level[11,12]: %d, level[11,13]: %d, jc: %d" \
-#            % (self.mayMarioJump, self.isMarioOnGround, self.levelScene[11,12], \
-#            self.levelScene[11,13], self.trueJumpCounter)
-#        if (self.isEpisodeOver):
-#            return numpy.ones(5, int)
-
-        if random.random() < 0.5:
-            self.action[self.KEY_JUMP] = 1
-        else:
-            self.action[self.KEY_JUMP] = 0
-
-        if random.random() < 0.5:
-            self.action[self.KEY_SPEED] = 1
-        else:
-            self.action[self.KEY_SPEED] = 0
-
-        if random.random() < 0.5:
-            self.action[0] = 1 # Left
-            self.action[1] = 0 # Right
-        else:
-            self.action[0] = 0 # Left
-            self.action[1] = 1 # Right
-
-        #self.action[0] = 0 # Left
-        #self.action[1] = 0 # Right
-        #self.action[2] = 1 # Duck
-
+        a_idx = self.q_learner.perceive(self.lastReward, self.levelScene, self.isEpisodeOver, self.isEpisodeOver)
+        self.action = self.actions[a_idx]
         return self.action
         
 
@@ -134,9 +133,14 @@ class MichaelAgent(MarioAgent):
         """This method stores the observation inside the agent"""
         if (len(obs) != 6):
             self.isEpisodeOver = True
+            self.lastReward = 0 # TODO: Fix
+            self.cumulativeReward = 0
         else:
+            self.isEpisodeOver = False
+            self.lastReward = obs[2][0] - self.cumulativeReward
+            self.cumulativeReward = obs[2][0]
             self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.enemiesFloats, self.levelScene, dummy = obs
-#        self.printLevelScene()
+
 
     def printLevelScene(self):
         ret = ""
@@ -146,6 +150,7 @@ class MichaelAgent(MarioAgent):
                 tmpData += self.mapElToStr(self.levelScene[x][y]);
             ret += "\n%s" % tmpData;
         print ret
+
 
     def mapElToStr(self, el):
         """maps element of levelScene to str representation"""
@@ -157,6 +162,8 @@ class MichaelAgent(MarioAgent):
             s += "#";
         return s + " "
 
+
     def printObs(self):
         """for debug"""
         print repr(self.observation)
+

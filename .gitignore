@@ -1,3 +1,5 @@
+src/python/competition/agents/results
+
 *.pyc
 
 # Compiled class file

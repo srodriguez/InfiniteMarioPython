@@ -1,5 +1,7 @@
 # Python Agent for Infinite Mario
 
+Press 'v' in the Mario window that appears to toggle visualisation. (See src/ch/idsia/ai/agents/human/CheaterKeyboardAgent.java) for a list of all the keyboard instructions.
+
 Steps to get running:
 * Download this repo.
 * Install Eclipse. I've tested the instructions with this version:
