@@ -19,6 +19,7 @@ class MarioEnvironment(TCPEnvironment):
     fastTCP = False
     
     # Other settings
+    visualization = True
     otherServerArgs = ""
     numberOfFitnessValues = 5
 
@@ -39,6 +40,10 @@ class MarioEnvironment(TCPEnvironment):
             argstring += "-pw off "
         else:
             argstring += "-pw on "
+        if self.visualization:
+            argstring += "-vis on "
+        else:
+            argstring += "-vis off "
         if self.fastTCP:
             argstring += "-fastTCP on"
 
