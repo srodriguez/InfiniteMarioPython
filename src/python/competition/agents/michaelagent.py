@@ -46,6 +46,7 @@ class MichaelAgent(MarioAgent):
         self.action[1] = 1
         self.actionStr = ""
         
+        self.extra_info_size = 7
         self.actionRepeat = 4
         self.stepsSinceNewAction = self.actionRepeat
 
@@ -98,7 +99,7 @@ class MichaelAgent(MarioAgent):
         agent_params["hist_len"] = 4
         agent_params["downsample_w"] = 22 # 84
         agent_params["downsample_h"] = 22 # 84
-        agent_params["extra_info_size"] = 2
+        agent_params["extra_info_size"] = self.extra_info_size
         agent_params["max_reward"] = 10.0 # Use float("inf") for no clipping
         agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
         agent_params["ep_start"] = 0.5 # 1
@@ -130,9 +131,16 @@ class MichaelAgent(MarioAgent):
         """
         self.stepsSinceNewAction += 1
         
-        extra_info = numpy.zeros((2), dtype=numpy.float32)
-        extra_info[0] = 1 if self.mayMarioJump else 0
-        extra_info[1] = 1 if self.isMarioOnGround else 0
+        extra_info = numpy.zeros((self.extra_info_size), dtype=numpy.float32)
+        
+        extra_info[0] = self.action[0]
+        extra_info[1] = self.action[1]
+        extra_info[2] = self.action[2]
+        extra_info[3] = self.action[3]
+        extra_info[4] = self.action[4]
+        
+        extra_info[5] = 1 if self.mayMarioJump else 0
+        extra_info[6] = 1 if self.isMarioOnGround else 0
         
         if self.stepsSinceNewAction >= self.actionRepeat:
             roughly_scaled_obs = (self.levelScene + 50.0) / 100.0
