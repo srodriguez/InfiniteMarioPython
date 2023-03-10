@@ -98,13 +98,14 @@ class MichaelAgent(MarioAgent):
         agent_params["hist_len"] = 4
         agent_params["downsample_w"] = 22 # 84
         agent_params["downsample_h"] = 22 # 84
+        agent_params["extra_info_size"] = 2
         agent_params["max_reward"] = 10.0 # Use float("inf") for no clipping
         agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
         agent_params["ep_start"] = 0.5 # 1
         agent_params["ep_end"] = 0.1
         agent_params["ep_endt"] = 50000 # 1000000
         agent_params["discount"] = 0.99
-        agent_params["learn_start"] = 1000 # 50000
+        agent_params["learn_start"] = 256 # 50000
         agent_params["update_freq"] = 4
         agent_params["n_replay"] = 1
         agent_params["minibatch_size"] = 32
@@ -119,7 +120,7 @@ class MichaelAgent(MarioAgent):
         transition_params["agent_params"] = agent_params
         transition_params["replay_size"] = 1000000
         transition_params["hist_spacing"] = 1
-        transition_params["bufferSize"] = 512
+        transition_params["bufferSize"] = 128 # 512
 
         self.q_learner = NeuralQLearner(agent_params, transition_params)
 
@@ -128,9 +129,14 @@ class MichaelAgent(MarioAgent):
         """ Possible analysis of current observation and sending an action back
         """
         self.stepsSinceNewAction += 1
+        
+        extra_info = numpy.zeros((2), dtype=numpy.float32)
+        extra_info[0] = 1 if self.mayMarioJump else 0
+        extra_info[1] = 1 if self.isMarioOnGround else 0
+        
         if self.stepsSinceNewAction >= self.actionRepeat:
             roughly_scaled_obs = (self.levelScene + 50.0) / 100.0
-            a_idx = self.q_learner.perceive(self.lastReward, roughly_scaled_obs, self.isEpisodeOver, self.isEpisodeOver)
+            a_idx = self.q_learner.perceive(self.lastReward, roughly_scaled_obs, extra_info, self.isEpisodeOver, self.isEpisodeOver)
             self.action = self.actions[a_idx]
             self.stepsSinceNewAction = 0
             

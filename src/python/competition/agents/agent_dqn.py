@@ -17,8 +17,8 @@ class AgentDQN(object):
 
         self.discount = agent_params["discount"]
 
-        self.network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.n_actions)
-        self.target_network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.n_actions)
+        self.network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
+        self.target_network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
         self.target_network.load_state_dict(self.network.state_dict())
         
         if agent_params["optimizer"] == 'adam':
@@ -33,16 +33,16 @@ class AgentDQN(object):
 
         assert self.manager.transitions.size() > self.manager.minibatch_size, 'Not enough transitions stored to learn'
 
-        s, a, r, _, s2, term = self.manager.transitions.sample(self.manager.minibatch_size)
+        s, extra_info, a, r, _, s2, extra_info2, term = self.manager.transitions.sample(self.manager.minibatch_size)
 
         r = torch.from_numpy(r).float().to(self.device)
         term = torch.from_numpy(term).float().to(self.device)
         a_tens = torch.from_numpy(a).to(self.device).unsqueeze(1).long()
 
-        q_tp1 = self.target_network.forward(s2).detach()
+        q_tp1 = self.target_network.forward(s2, extra_info2).detach()
 
         # Calculate q-values at time t
-        q_values = self.network.forward(s).gather(1, a_tens).squeeze()
+        q_values = self.network.forward(s, extra_info).gather(1, a_tens).squeeze()
 
         value_tp1, _ = q_tp1.max(1)
 
@@ -71,12 +71,12 @@ class AgentDQN(object):
         self.target_network.load_state_dict(self.network.state_dict())
 
 
-    def greedy(self, state):
+    def greedy(self, state, extra_info):
 
         # Turn single state into minibatch.  Needed for convolutional nets.
         assert state.dim() >= 3, 'Input must be at least 3D'
 
-        q = self.network.forward(state).cpu().detach().squeeze()
+        q = self.network.forward(state, extra_info).cpu().detach().squeeze()
         q = q.numpy()
 
         maxq = q[0]

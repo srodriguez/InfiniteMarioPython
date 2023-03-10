@@ -30,6 +30,7 @@ class NeuralQLearner(object):
         self.hist_len = agent_params["hist_len"]
         self.downsample_w = agent_params["downsample_w"]
         self.downsample_h = agent_params["downsample_h"]
+        self.extra_info_size = agent_params["extra_info_size"]
         self.max_reward = agent_params["max_reward"]
         self.min_reward = agent_params["min_reward"]
         self.ep_start = agent_params["ep_start"]
@@ -130,19 +131,22 @@ class NeuralQLearner(object):
         self.episode_score_clipped = 0
 
 
-    def perceive(self, reward, rawstate, terminal, game_over):
+    def perceive(self, reward, rawstate, extra_info, terminal, game_over):
 
         #rawstate = torch.from_numpy(rawstate)
         #state = self.preproc.forward(rawstate)
 
         state = cv2.resize(rawstate, (self.downsample_w, self.downsample_h), interpolation=cv2.INTER_AREA)
+        
         state = torch.from_numpy(state).float()
-
+        extra_info = torch.from_numpy(extra_info).float()
+        
         # Update the unclipped, undiscounted total reward (i.e. the game score)
         self.episode_score += reward
 
-        self.transitions.add_recent_state(state, terminal)
-        curState = self.transitions.get_recent().reshape(1, self.hist_len, self.downsample_w, self.downsample_h).to(self.device)
+        self.transitions.add_recent_state(state, extra_info, terminal)
+        curState, curExtra = self.transitions.get_recent()
+        curState = curState.reshape(1, self.hist_len, self.downsample_w, self.downsample_h).to(self.device)
 
         # Clip the reward
         reward = np.minimum(reward, self.max_reward)
@@ -168,7 +172,7 @@ class NeuralQLearner(object):
         # Select action
         actionIndex = 0
         if not terminal:
-            actionIndex = self.eGreedy(curState)
+            actionIndex = self.eGreedy(curState, curExtra)
 
         self.q_values_plot.add_data_point("bestq", self.numSteps, self.bestq, True, self.show_graphs)
         if True: # self.ale.isUpdatingScreenImage():
@@ -199,7 +203,7 @@ class NeuralQLearner(object):
         return actionIndex
 
 
-    def eGreedy(self, state):
+    def eGreedy(self, state, extra_info):
 
         self.ep = self.ep_end + np.maximum(0, (self.ep_start - self.ep_end) * (self.ep_endt - np.maximum(0, self.numSteps - self.learn_start)) / self.ep_endt)
 
@@ -207,7 +211,7 @@ class NeuralQLearner(object):
         #if self.ep == 1:
         #    return randrange(self.n_actions)
         
-        a = self.agent.greedy(state)
+        a = self.agent.greedy(state, extra_info)
 
         # Epsilon greedy
         if np.random.uniform() < self.ep:
