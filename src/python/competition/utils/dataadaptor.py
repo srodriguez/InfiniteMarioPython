@@ -3,14 +3,14 @@ __date__ = "$Apr 30, 2009 1:53:54 PM$"
 
 import numpy
     
-from bitsTest import powsof2
+from utils.bitsTest import powsof2
     
 def show(el):
 #    powsof2 = (1, 2, 4, 8, 16, 32, 64, 128)
-    print "block (", el, ") :",
+    print("block (", el, ") :",)
     for  i in range(16):
-        print ((int(el) & powsof2[i])),
-    print
+        print(((int(el) & powsof2[i]))),
+    print()
 
 
 def decode(estate):
@@ -46,8 +46,8 @@ def decode(estate):
             col += 1
             if (totalBitsDecoded == 484):
                 break
-    print "totalBitsDecoded = ", totalBitsDecoded
-    return dstate, check_sum;
+    print("totalBitsDecoded = ", totalBitsDecoded)
+    return dstate, check_sum
 
 
 def extractObservation(data):
@@ -67,7 +67,7 @@ def extractObservation(data):
         check_sum_recv = int(data[34:])
 #        assert check_sum_got == check_sum_recv, "Error check_sum! got %d != etalon %d" % (check_sum_got, check_sum_recv)
         if check_sum_got != check_sum_recv:
-            print "Error check_sum! got %d != recv %d" % (check_sum_got, check_sum_recv)
+            print("Error check_sum! got %d != recv %d" % (check_sum_got, check_sum_recv))
 #        for i in range(22):
 #            for j in range(22):
 #               if levelScene[i, j] != 0:

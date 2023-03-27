@@ -1,7 +1,7 @@
 __author__="Sergey Karakovskiy, sergey at idsia fullstop ch"
 __date__ ="$May 12, 2009 11:46:44 PM$"
 
-from task import Task
+from tasks.task import Task
 
 class EpisodicTask(Task):
     """

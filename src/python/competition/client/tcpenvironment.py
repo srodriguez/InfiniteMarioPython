@@ -1,9 +1,11 @@
 __author__ = "Sergey Karakovskiy, sergey at idsia fullstop ch"
 __date__ = "$May 13, 2009 1:25:30 AM$"
 
-from client import Client
-from environment import Environment
+from client.client import Client
+from client.environment import Environment
 from utils.dataadaptor import show
+from past.builtins import basestring
+from builtins import str
 
 class TCPEnvironment(Environment):
 
@@ -13,7 +15,7 @@ class TCPEnvironment(Environment):
         self.host = host
         self.port = port
         if self.verbose:
-            print "TCPENV: agentName ", agentName
+            print("TCPENV: agentName ", agentName)
         self.client = Client(host, port, agentName)
         self.connected = True
 
@@ -21,10 +23,12 @@ class TCPEnvironment(Environment):
         """returns the availability status of the environment"""
         return self.connected
 
+    ## The basestring is an issue here
+    ## encoding is what needs to happen
     def to_unicode_or_bust(self, obj, encoding = 'utf-8'):
         if isinstance(obj, basestring):
-            if not isinstance(obj, unicode):
-                obj = unicode(obj, encoding)
+            if not isinstance(obj, str):
+                obj = str(obj, encoding)
         return obj
 
     def getSensors(self):

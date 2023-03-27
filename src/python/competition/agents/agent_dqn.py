@@ -5,7 +5,7 @@ import torch.optim as optim
 import numpy as np
 import copy
 from random import randrange
-from dqn import DQN
+from agents.dqn import DQN
 
 class AgentDQN(object):
 
@@ -17,32 +17,32 @@ class AgentDQN(object):
 
         self.discount = agent_params["discount"]
 
-        self.network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
-        self.target_network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
+        self.network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.n_actions)
+        self.target_network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.n_actions)
         self.target_network.load_state_dict(self.network.state_dict())
-        
+
         if agent_params["optimizer"] == 'adam':
             self.optimizer = optim.Adam(self.network.parameters(), lr=agent_params["adam_lr"], betas=(agent_params["adam_beta1"], agent_params["adam_beta2"]), eps=agent_params["adam_eps"])
         elif agent_params["optimizer"] == 'rms_prop':
             self.optimizer = optim.RMSprop(self.network.parameters(), lr=agent_params["rms_prop_lr"], alpha=agent_params["rms_prop_alpha"], eps=agent_params["rms_prop_eps"], weight_decay=0, momentum=0, centered=True)
         else:
             sys.exit('Optimizer type (' + agent_params["optimizer"] + ') not recognised!')
- 
- 
+
+
     def learn(self):
 
         assert self.manager.transitions.size() > self.manager.minibatch_size, 'Not enough transitions stored to learn'
 
-        s, extra_info, a, r, _, s2, extra_info2, term = self.manager.transitions.sample(self.manager.minibatch_size)
+        s, a, r, _, s2, term = self.manager.transitions.sample(self.manager.minibatch_size)
 
         r = torch.from_numpy(r).float().to(self.device)
         term = torch.from_numpy(term).float().to(self.device)
         a_tens = torch.from_numpy(a).to(self.device).unsqueeze(1).long()
 
-        q_tp1 = self.target_network.forward(s2, extra_info2).detach()
+        q_tp1 = self.target_network.forward(s2).detach()
 
         # Calculate q-values at time t
-        q_values = self.network.forward(s, extra_info).gather(1, a_tens).squeeze()
+        q_values = self.network.forward(s).gather(1, a_tens).squeeze()
 
         value_tp1, _ = q_tp1.max(1)
 
@@ -51,7 +51,7 @@ class AgentDQN(object):
         # _, greedy_act = q_tp1.max(1)
         # greedy_act = greedy_act.unsqueeze(1)
         # value_tp1 = q_tp1.gather(1, greedy_act).squeeze()
-        
+
         target_overall = torch.ones_like(term).sub(term).mul(self.discount).mul(value_tp1).add(r)
 
         error = q_values - target_overall
@@ -71,12 +71,12 @@ class AgentDQN(object):
         self.target_network.load_state_dict(self.network.state_dict())
 
 
-    def greedy(self, state, extra_info):
+    def greedy(self, state):
 
         # Turn single state into minibatch.  Needed for convolutional nets.
         assert state.dim() >= 3, 'Input must be at least 3D'
 
-        q = self.network.forward(state, extra_info).cpu().detach().squeeze()
+        q = self.network.forward(state).cpu().detach().squeeze()
         q = q.numpy()
 
         maxq = q[0]

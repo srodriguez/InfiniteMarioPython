@@ -9,19 +9,19 @@ class Preproc(nn.Module):
 
     def __init__(self, agent_params, height, width):
         super(Preproc, self).__init__()
-        
+
         self.agent_params = agent_params
         self.height = height
         self.width = width
 
-        
+
     def forward(self, x):
 
         if x.dim() > 3:
             x = x[0]
-            
+
         x = x.float()
-     
+
         if self.agent_params["use_rgb_for_raw_state"]:
 
             # See https://groups.google.com/forum/#!topic/arcade-learning-environment/JHKeYxTzxvo

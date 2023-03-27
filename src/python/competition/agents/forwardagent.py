@@ -2,7 +2,7 @@ import numpy
 __author__ = "Sergey Karakovskiy, sergey at idsia fullstop ch"
 __date__ = "$May 1, 2009 2:46:34 AM$"
 
-from marioagent import MarioAgent
+from agents.marioagent import MarioAgent
 
 class ForwardAgent(MarioAgent):
     """ In fact the Python twin of the
@@ -18,6 +18,7 @@ class ForwardAgent(MarioAgent):
     marioFloats = None
     enemiesFloats = None
     isEpisodeOver = False
+    observation = None
 
     trueJumpCounter = 0;
     trueSpeedCounter = 0;
@@ -52,13 +53,13 @@ class ForwardAgent(MarioAgent):
         Just substitue getAction by this method and see how it behaves.
         """
         if (self.mayMarioJump):
-                    print "m: %d, %s, %s, 12: %d, 13: %d, j: %d" \
+                    print("m: %d, %s, %s, 12: %d, 13: %d, j: %d") \
             % (self.levelScene[11, 11], self.mayMarioJump, self.isMarioOnGround, \
             self.levelScene[11, 12], self.levelScene[11, 12], self.trueJumpCounter)
         else:
             if self.levelScene == None:
-                print "Bad news....."
-            print "m: %d, 12: %d, 13: %d, j: %d" \
+                print("Bad news.....")
+            print("m: %d, 12: %d, 13: %d, j: %d") \
                 % (self.levelScene[11, 11], \
                 self.levelScene[11, 12], self.levelScene[11, 12], self.trueJumpCounter)
 
@@ -73,12 +74,12 @@ class ForwardAgent(MarioAgent):
                 a[self.KEY_JUMP] = 1
             self.trueJumpCounter += 1
         else:
-            a[self.KEY_JUMP] = 0;
+            a[self.KEY_JUMP] = 0
             self.trueJumpCounter = 0
 
         if (self.trueJumpCounter > 16):
             self.trueJumpCounter = 0
-            self.action[self.KEY_JUMP] = 0;
+            self.action[self.KEY_JUMP] = 0
 
         a[self.KEY_SPEED] = danger
 
@@ -90,10 +91,10 @@ class ForwardAgent(MarioAgent):
             elif a[i] == 0:
                 actionStr += '0'
             else:
-                print "something very dangerous happen...."
+                print("something very dangerous happen....")
 
         actionStr += "\r\n"
-        print "action: " , actionStr
+        print("action: " , actionStr)
         return actionStr
 
     def getAction(self):
@@ -125,31 +126,33 @@ class ForwardAgent(MarioAgent):
 
     def integrateObservation(self, obs):
         """This method stores the observation inside the agent"""
+        self.observation = obs
         if (len(obs) != 6):
             self.isEpisodeOver = True
         else:
             self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.enemiesFloats, self.levelScene, dummy = obs
 #        self.printLevelScene()
+        #self.printObs()
 
     def printLevelScene(self):
         ret = ""
         for x in range(22):
             tmpData = ""
             for y in range(22):
-                tmpData += self.mapElToStr(self.levelScene[x][y]);
-            ret += "\n%s" % tmpData;
-        print ret
+                tmpData += self.mapElToStr(self.levelScene[x][y])
+            ret += "\n%s" % tmpData
+        print(ret)
 
     def mapElToStr(self, el):
         """maps element of levelScene to str representation"""
-        s = "";
+        s = ""
         if  (el == 0):
             s = "##"
         s += "#MM#" if (el == 95) else str(el)
         while (len(s) < 4):
-            s += "#";
+            s += "#"
         return s + " "
 
     def printObs(self):
         """for debug"""
-        print repr(self.observation)
+        print(repr(self.observation))
