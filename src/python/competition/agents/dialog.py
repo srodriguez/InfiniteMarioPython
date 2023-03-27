@@ -121,3 +121,4 @@ class Dialog(object):
             plot["fig"].canvas.flush_events()
             plot["fig"].savefig(log_dir + 'plot_' + str(key) + '.png', format='png')
             plt.clf()
+
