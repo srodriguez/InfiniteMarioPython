@@ -125,7 +125,7 @@ class MichaelAgent(MarioAgent):
         agent_params["ep_end"] = 0.1
         agent_params["ep_endt"] = 200000 # 1000000
         agent_params["discount"] = 0.97 # 0.99
-        agent_params["learn_start"] = 2500 # 10000 # 50000
+        agent_params["learn_start"] = 10000 # 50000
         agent_params["update_freq"] = 4
         agent_params["n_replay"] = 1
         agent_params["minibatch_size"] = 32

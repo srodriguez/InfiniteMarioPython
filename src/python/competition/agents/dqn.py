@@ -52,6 +52,15 @@ class DQN(nn.Module):
         
     def binaryWorldMaker(self, state, dictionary):
     
+        enemy_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('enemies')], dim=0), dim = 0)
+        obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('obstacles')], dim=0), dim = 0)
+        powerup_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('powerups')], dim=0), dim = 0)
+        
+        return torch.cat((enemy_rep, obstacle_rep, powerup_rep), dim=1)
+        
+    
+    def binaryWorldMaker_old(self, state, dictionary):
+    
         state = state.cpu().numpy()
         n_batch = state.shape[0]
         n_channels_in = state.shape[1]
