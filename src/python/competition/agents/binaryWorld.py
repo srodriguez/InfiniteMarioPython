@@ -2,7 +2,8 @@
 ### Example use
 ### enemyList, obstaclesList, powerupsList = binaryWorldMaker(self.observation, dictionaryList)
 
-dictionaryList ={'enemies':[2,9,25,20],'obstacles':[-10,-11],'powerups':[16,21]}
+#dictionaryList ={'enemies':[2,9,25,20],'obstacles':[-10,-11],'powerups':[16,21]}
+dictionaryList ={'enemies':[2,9,25,20],'obstacles':[246,245],'powerups':[16,21]}
 
 def binaryWorldMaker(state, dictionary):
     ## Get the world representation

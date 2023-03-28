@@ -82,8 +82,8 @@ class TransitionTable(object):
             self.buf_extra_info2[buf_ind].copy_(extra_info2)
             self.buf_term[buf_ind] = term
 
-        self.buf_s = self.buf_s.float().div(255)
-        self.buf_s2 = self.buf_s2.float().div(255)
+        #self.buf_s = self.buf_s.float().div(255)
+        #self.buf_s2 = self.buf_s2.float().div(255)
 
         if self.gpu >= 0:
             self.gpu_s.copy_(self.buf_s)
@@ -176,7 +176,8 @@ class TransitionTable(object):
 
         # Assumes that the most recent state has been added, but the action has not
         fullstate, fullextra = self.concatFrames(0, True)
-        return fullstate.float().div(255), fullextra
+        #return fullstate.float().div(255), fullextra
+        return fullstate, fullextra
 
 
     def wrap_index(self, index, use_recent=False):
@@ -216,7 +217,7 @@ class TransitionTable(object):
             term_stored_value = 1
 
         # Overwrite (s, a, r, t) at insertIndex
-        self.s[self.insertIndex] = s.clone().float().mul(255)
+        self.s[self.insertIndex] = s.byte()
         self.a[self.insertIndex] = a
         self.r[self.insertIndex] = r
         self.ret[self.insertIndex] = ret
@@ -236,7 +237,7 @@ class TransitionTable(object):
 
     def add_recent_state(self, s, extra_info, term):
 
-        s = s.clone().float().mul(255).byte()
+        s = s.byte()
 
         if len(self.recent_s) == 0:
             for i in range(0, self.recentMemSize):

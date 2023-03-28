@@ -41,7 +41,7 @@ class MichaelAgent(MarioAgent):
 
     def __init__(self):
         """Constructor"""
-        self.use_gpu = False
+        self.use_gpu = True # False
         self.trueJumpCounter = 0
         self.trueSpeedCounter = 0
         self.action = numpy.zeros(5, int)
@@ -125,7 +125,7 @@ class MichaelAgent(MarioAgent):
         agent_params["ep_end"] = 0.1
         agent_params["ep_endt"] = 200000 # 1000000
         agent_params["discount"] = 0.97 # 0.99
-        agent_params["learn_start"] = 10000 # 50000
+        agent_params["learn_start"] = 2500 # 10000 # 50000
         agent_params["update_freq"] = 4
         agent_params["n_replay"] = 1
         agent_params["minibatch_size"] = 32
@@ -174,9 +174,10 @@ class MichaelAgent(MarioAgent):
         #    force_no_jump = True
 
         if self.stepsSinceNewAction >= self.actionRepeat:
-            roughly_scaled_obs = (self.levelScene + 50.0) / 25.0 # 100.0
+            #obs = (self.levelScene + 50.0) / 25.0 # 100.0
+            obs = self.levelScene
             r = 0.1 * (self.cumuReward / self.actionRepeat)
-            a_idx = self.q_learner.perceive(r, roughly_scaled_obs, extra_info, self.cumuIsEpisodeOver, self.cumuIsEpisodeOver)
+            a_idx = self.q_learner.perceive(r, obs, extra_info, self.cumuIsEpisodeOver, self.cumuIsEpisodeOver)
             self.action = self.actions[a_idx]
             self.stepsSinceNewAction = 0
             self.cumuReward = 0
