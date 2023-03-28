@@ -16,7 +16,7 @@ from agents.michaelagent import MichaelAgent
 
 def main():
     agent = MichaelAgent()
-    task = MarioTask(agent.name, initMarioMode = 2)
+    task = MarioTask(agent.name)
     exp = EpisodicExperiment(task, agent)
     print('Task Ready')
     exp.doEpisodes(999999)

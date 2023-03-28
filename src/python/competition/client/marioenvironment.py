@@ -9,7 +9,7 @@ class MarioEnvironment(TCPEnvironment):
     and allowing interactions to a level. """
 
     # Level settings
-    levelDifficulty = 0
+    levelDifficulty = 1
     levelType = 0
     creaturesEnabled = True
     initMarioMode = 2
