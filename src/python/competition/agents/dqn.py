@@ -19,7 +19,7 @@ class DQN(nn.Module):
         # 21 is question brick -- most similar to hard obstacle
 
         self.dictionaryList ={
-            'enemies':[2,4,6,7,9,12,13],
+            'enemies':[2,3,4,5,6,7,8,9,10,12,13],
             'hard_obstacles':[16,21,246],
             'platform_obstacles':[245],
             'dangerous_obstacles':[20],
@@ -32,13 +32,13 @@ class DQN(nn.Module):
         self.device = torch.device("cuda" if gpu >= 0 else "cpu")
         
         #self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=8, stride=4).to(self.device)
-        self.conv1 = nn.Conv2d(in_channels=in_channels*self.num_categories, out_channels=32, kernel_size=4, stride=2).to(self.device)
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=16, kernel_size=4, stride=2).to(self.device)
+        self.conv1 = nn.Conv2d(in_channels=in_channels*self.num_categories, out_channels=64, kernel_size=4, stride=2).to(self.device)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=2).to(self.device)
         #self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1).to(self.device)
         
         #self.fc1 = nn.Linear(in_features=7*7*64, out_features=512).to(self.device)
-        self.fc1 = nn.Linear(in_features=4*4*16 + extra_latent_size, out_features=128).to(self.device)
-        self.fc2 = nn.Linear(in_features=128, out_features=num_actions).to(self.device)
+        self.fc1 = nn.Linear(in_features=4*4*64 + extra_latent_size, out_features=512).to(self.device)
+        self.fc2 = nn.Linear(in_features=512, out_features=num_actions).to(self.device)
 
         # In the Nature paper the biases aren't zeroed, although it's probably good practice to zero them.
         # self.conv1.bias.data.fill_(0.0)

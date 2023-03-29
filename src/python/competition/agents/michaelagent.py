@@ -115,13 +115,13 @@ class MichaelAgent(MarioAgent):
         agent_params["gpu"] = 0 if self.use_gpu else -1
         agent_params["n_actions"] = len(self.actions)
         agent_params["use_rgb_for_raw_state"] = False
-        agent_params["hist_len"] = 4
+        agent_params["hist_len"] = 2 # 4
         agent_params["downsample_w"] = 22 # 84
         agent_params["downsample_h"] = 22 # 84
         agent_params["extra_info_size"] = self.extra_info_size
         agent_params["max_reward"] = 10.0 # Use float("inf") for no clipping
         agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
-        agent_params["ep_start"] = 1 # 1
+        agent_params["ep_start"] = 1
         agent_params["ep_end"] = 0.1
         agent_params["ep_endt"] = 250000 # 200000 # 1000000
         agent_params["discount"] = 0.99
@@ -140,7 +140,7 @@ class MichaelAgent(MarioAgent):
         transition_params["agent_params"] = agent_params
         transition_params["replay_size"] = 1000000
         transition_params["hist_spacing"] = 1
-        transition_params["bufferSize"] = 128 # 512
+        transition_params["bufferSize"] = 512
 
         self.q_learner = NeuralQLearner(agent_params, transition_params)
 
