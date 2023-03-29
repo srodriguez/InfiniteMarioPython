@@ -49,7 +49,7 @@ class MichaelAgent(MarioAgent):
         self.actionStr = ""
         
         self.extra_info_size = 10
-        self.actionRepeat = 4
+        self.actionRepeat = 2 # 4
         self.stepsSinceNewAction = self.actionRepeat
 
         # Left, right, down, jump, speed
@@ -123,9 +123,9 @@ class MichaelAgent(MarioAgent):
         agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
         agent_params["ep_start"] = 1 # 1
         agent_params["ep_end"] = 0.1
-        agent_params["ep_endt"] = 50000 # 200000 # 1000000
-        agent_params["discount"] = 0.97 # 0.99
-        agent_params["learn_start"] = 10000 # 50000
+        agent_params["ep_endt"] = 250000 # 200000 # 1000000
+        agent_params["discount"] = 0.99
+        agent_params["learn_start"] = 12500 # 50000
         agent_params["update_freq"] = 4
         agent_params["n_replay"] = 1
         agent_params["minibatch_size"] = 32
