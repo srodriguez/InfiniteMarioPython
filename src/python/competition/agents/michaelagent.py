@@ -176,6 +176,10 @@ class MichaelAgent(MarioAgent):
         #if self.isMarioOnGround and (not self.mayMarioJump):
         #    force_no_jump = True
 
+        # If game over, observe it immediately and move on
+        if self.cumuIsEpisodeOver:
+            self.stepsSinceNewAction = self.actionRepeat
+
         if self.stepsSinceNewAction >= self.actionRepeat:
             #obs = (self.levelScene + 50.0) / 25.0 # 100.0
             obs = self.levelScene
@@ -198,7 +202,6 @@ class MichaelAgent(MarioAgent):
             self.lastReward = 0 # TODO: Fix
             self.isEpisodeOver = True
             # print(self.lastMarioX) # Generally 2304 when the level gets finished
-            self.lastMarioX = None
         else:
             if self.lastMarioX is not None:
                 self.lastReward = obs[2][0] - self.lastMarioX
@@ -209,12 +212,10 @@ class MichaelAgent(MarioAgent):
 
         self.cumuIsEpisodeOver = (self.cumuIsEpisodeOver or self.isEpisodeOver)
         
-        # TODO: Fix
         if self.cumuIsEpisodeOver:
-            # print(self.lastMarioX)
-            self.cumuReward = 0
-        else:
-            self.cumuReward += self.lastReward
+            self.lastMarioX = None
+
+        self.cumuReward += self.lastReward
 
 
     def printLevelScene(self):

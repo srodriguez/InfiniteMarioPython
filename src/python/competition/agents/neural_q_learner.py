@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import cv2
+import datetime
 from random import randrange
 from agents.dqn import DQN
 from agents.agent_dqn import AgentDQN
@@ -112,6 +113,8 @@ class NeuralQLearner(object):
 
     def handle_game_over(self):
 
+        print(str(datetime.datetime.now()) + ', neural_q_learner received termination signal, self.episode_score = ' + str(32.0 + 40.0 * self.episode_score))
+
         self.moving_average_score = self.moving_average_score_mom * self.moving_average_score + (1.0 - self.moving_average_score_mom) * self.episode_score
         self.moving_average_score_clipped = self.moving_average_score_mom * self.moving_average_score_clipped + (1.0 - self.moving_average_score_mom) * self.episode_score_clipped
 
@@ -122,7 +125,6 @@ class NeuralQLearner(object):
 
         self.score_plot.add_data_point("movingAverageScore", self.numSteps, [zero_debiased_score], False, self.show_graphs)
         self.clipped_score_plot.add_data_point("movingAverageClippedScore", self.numSteps, [zero_debiased_score_clipped], False, self.show_graphs)
-        print('')
 
         if self.show_extra_plots:
             self.agent.update_plots()

@@ -7,10 +7,27 @@ class DQN(nn.Module):
     def __init__(self, gpu, in_channels, extra_latent_size, num_actions):
         super(DQN, self).__init__()
 
-        self.num_categories = 3 # Enemies, obstacles, powerups
+        self.unique_ids = None
+
+        self.num_categories = 6 # enemies, hard obstacles, platform obstacles, dangerous obstacles, powerups, fireballs
         
-        #self.dictionaryList ={'enemies':[2,9,25,20],'obstacles':[-10,-11],'powerups':[16,21]}
-        self.dictionaryList ={'enemies':[2,9,25,20],'obstacles':[246,245],'powerups':[16,21]}
+        # Michael note: See 'ZLevelMapElementGeneralization' in LevelScene.java (ch.idsia.mario.engine)
+        # Michael note: Also see Sprite.java (ch.idsia.mario.engine.sprites)
+
+        # 16 is brick (simple). Also used for bricks with hidden items to prevent cheating.
+        # 20 is angry flower pot or cannot. I guess it's most similar to a hard obstacle, but maybe more like 'dangerous obstacle'?
+        # 21 is question brick -- most similar to hard obstacle
+
+        self.dictionaryList ={
+            'enemies':[2,4,6,7,9,12,13],
+            'hard_obstacles':[16,21,246],
+            'platform_obstacles':[245],
+            'dangerous_obstacles':[20],
+            'powerups':[14, 15],
+            'fireballs':[25]
+        }
+
+        #self.dictionaryList ={'enemies':[2,3,4,5,6,7,8,9,10,12],'obstacles':[245,246],'powerups':[16,21]}
     
         self.device = torch.device("cuda" if gpu >= 0 else "cpu")
         
@@ -35,6 +52,19 @@ class DQN(nn.Module):
 
     def forward(self, x, extra_info):
     
+        if self.unique_ids is None:
+            self.unique_ids = x.unique()
+        else:
+            new_ids = torch.cat((self.unique_ids, x.unique())).unique()
+            if new_ids.size()[0] > self.unique_ids.size()[0]:
+                #print("Old categories:")
+                #print(self.unique_ids)
+                #print("New categories:")
+                #print(new_ids)
+                #print(x[0][3])
+                #input()
+                self.unique_ids = new_ids
+
         x = self.binaryWorldMaker(x, self.dictionaryList).float().to(self.device)
 
         x = self.relu(self.conv1(x))
@@ -53,10 +83,13 @@ class DQN(nn.Module):
     def binaryWorldMaker(self, state, dictionary):
     
         enemy_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('enemies')], dim=0), dim = 0)
-        obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('obstacles')], dim=0), dim = 0)
+        hard_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('hard_obstacles')], dim=0), dim = 0)
+        platform_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('platform_obstacles')], dim=0), dim = 0)
+        dangerous_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('dangerous_obstacles')], dim=0), dim = 0)
         powerup_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('powerups')], dim=0), dim = 0)
+        fireball_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('fireballs')], dim=0), dim = 0)
         
-        return torch.cat((enemy_rep, obstacle_rep, powerup_rep), dim=1)
+        return torch.cat((enemy_rep, hard_obstacle_rep, platform_obstacle_rep, dangerous_obstacle_rep, powerup_rep, fireball_rep), dim=1)
         
     
     def binaryWorldMaker_old(self, state, dictionary):
