@@ -113,7 +113,7 @@ class NeuralQLearner(object):
 
     def handle_game_over(self):
 
-        print(str(datetime.datetime.now()) + ', neural_q_learner received termination signal, self.episode_score = ' + str(32.0 + 40.0 * self.episode_score))
+        print(str(datetime.datetime.now()) + ', neural_q_learner received termination signal, self.episode_score = ' + str(self.episode_score))
 
         self.moving_average_score = self.moving_average_score_mom * self.moving_average_score + (1.0 - self.moving_average_score_mom) * self.episode_score
         self.moving_average_score_clipped = self.moving_average_score_mom * self.moving_average_score_clipped + (1.0 - self.moving_average_score_mom) * self.episode_score_clipped

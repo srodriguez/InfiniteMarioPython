@@ -364,6 +364,10 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
     public int getKillsByShell() {
         return mario.world.killedCreaturesByShell;
     }
+    
+    public int getCoinsCollected() {
+    	return mario.coins;
+    }
 
     public byte[][] getCompleteObservation() {
         if (scene instanceof LevelScene)

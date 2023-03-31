@@ -18,7 +18,7 @@ def decode(estate):
     decodes the encoded state estate, which is a string of 61 chars
     """
 #    powsof2 = (1, 2, 4, 8, 16, 32, 64, 128)
-    dstate = numpy.empty(shape = (22, 22), dtype = numpy.int)
+    dstate = numpy.empty(shape = (22, 22), dtype = numpy.int32)
     for i in range(22):
         for j in range(22):
             dstate[i, j] = 2
@@ -56,7 +56,7 @@ def extractObservation(data):
     """
 
     obsLength = 487
-    levelScene = numpy.empty(shape = (22, 22), dtype = numpy.int)
+    levelScene = numpy.empty(shape = (22, 22), dtype = numpy.int32)
     enemiesFloats = []
     dummy = 0
     if(data[0] == 'E'): #Encoded observation, fastTCP mode, have to be decoded
@@ -98,8 +98,19 @@ def extractObservation(data):
                 levelScene[i, j] = int(data[k + 3])
                 k += 1
         k += 3
+
         marioFloats = (float(data[k]), float(data[k + 1]))
-        k += 2        
+        k += 2       
+
+        marioMode = int(data[k])
+        k += 1
+ 
+        coinsCollected = int(data[k])
+        k += 1
+
+        enemyKills = int(data[k])
+        k += 1
+
         while k < len(data):
             enemiesFloats.append(float(data[k]))
             k += 1
@@ -112,6 +123,6 @@ def extractObservation(data):
 #                   print ' ',
 #            print 
            
-        return (mayMarioJump, isMarioOnGround, marioFloats, enemiesFloats, levelScene, dummy)
+        return (mayMarioJump, isMarioOnGround, marioFloats, marioMode, coinsCollected, enemyKills, enemiesFloats, levelScene, dummy)
     else:
         raise "Wrong format or corrupted observation..."

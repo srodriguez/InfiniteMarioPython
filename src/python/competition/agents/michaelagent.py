@@ -22,6 +22,9 @@ class MichaelAgent(MarioAgent):
     mayMarioJump = None
     isMarioOnGround = None
     marioFloats = None
+    marioMode = None
+    coinsCollected = None
+    enemyKills = None
     enemiesFloats = None
     isEpisodeOver = False
 
@@ -48,7 +51,7 @@ class MichaelAgent(MarioAgent):
         self.action[1] = 1
         self.actionStr = ""
         
-        self.extra_info_size = 10
+        self.extra_info_size = 11
         self.actionRepeat = 2 # 4
         self.stepsSinceNewAction = self.actionRepeat
 
@@ -169,7 +172,9 @@ class MichaelAgent(MarioAgent):
 
         # Progress through the level (should make it easier to learn an accurate Q-function)
         extra_info[9] = 2.0 * (self.marioFloats[0] / 2304.0) # 2.0 is just a hacky scale factor
-        
+
+        extra_info[10] = self.marioMode
+
         # This is a bit hacky... Ideally the agent should be able to learn this.
         # Can try taking it out later.
         #force_no_jump = False
@@ -183,7 +188,7 @@ class MichaelAgent(MarioAgent):
         if self.stepsSinceNewAction >= self.actionRepeat:
             #obs = (self.levelScene + 50.0) / 25.0 # 100.0
             obs = self.levelScene
-            r = 0.1 * (self.cumuReward / self.actionRepeat)
+            r = self.cumuReward
             a_idx = self.q_learner.perceive(r, obs, extra_info, self.cumuIsEpisodeOver, self.cumuIsEpisodeOver)
             self.action = self.actions[a_idx]
             self.stepsSinceNewAction = 0
@@ -196,19 +201,37 @@ class MichaelAgent(MarioAgent):
         return self.action
         
 
+    def integrateEvaluationInfo(self, evaluationInfo):
+        print(evaluationInfo)
+
     def integrateObservation(self, obs):
         """This method stores the observation inside the agent"""
-        if (len(obs) != 6):
+        #marioMode = -1
+        #print(obs)
+        if (len(obs) != 9):
             self.lastReward = 0 # TODO: Fix
             self.isEpisodeOver = True
             # print(self.lastMarioX) # Generally 2304 when the level gets finished
         else:
+            newMarioX = obs[2][0]
+            newMarioMode = obs[3]
+            newCoinsCollected = obs[4]
+            newEnemyKills = obs[5]
             if self.lastMarioX is not None:
-                self.lastReward = obs[2][0] - self.lastMarioX
+                self.lastReward = (newMarioMode - self.marioMode) \
+                    + 0.2 * (newEnemyKills - self.enemyKills) \
+                    + 0.1 * (newCoinsCollected - self.coinsCollected) \
+                    + 0.01 * (newMarioX - self.lastMarioX)
                 
+            self.lastMarioX = newMarioX
+            self.marioMode = newMarioMode
+            self.coinsCollected = newCoinsCollected
+            self.enemyKills = newEnemyKills
+
             self.isEpisodeOver = False
-            self.lastMarioX = obs[2][0]
-            self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.enemiesFloats, self.levelScene, dummy = obs
+            self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.marioMode, self.coinsCollected, self.enemyKills, self.enemiesFloats, self.levelScene, dummy = obs
+
+        # print("marioMode = " + str(self.marioMode) + ", coins collected = " + str(self.coinsCollected))
 
         self.cumuIsEpisodeOver = (self.cumuIsEpisodeOver or self.isEpisodeOver)
         

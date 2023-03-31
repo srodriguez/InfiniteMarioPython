@@ -9,7 +9,7 @@ class DQN(nn.Module):
 
         self.unique_ids = None
 
-        self.num_categories = 6 # enemies, hard obstacles, platform obstacles, dangerous obstacles, powerups, fireballs
+        self.num_categories = 7 # enemies, hard obstacles, platform obstacles, dangerous obstacles, powerups, coins, fireballs
         
         # Michael note: See 'ZLevelMapElementGeneralization' in LevelScene.java (ch.idsia.mario.engine)
         # Michael note: Also see Sprite.java (ch.idsia.mario.engine.sprites)
@@ -24,6 +24,7 @@ class DQN(nn.Module):
             'platform_obstacles':[245],
             'dangerous_obstacles':[20],
             'powerups':[14, 15],
+            'coins':[34],
             'fireballs':[25]
         }
 
@@ -87,9 +88,10 @@ class DQN(nn.Module):
         platform_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('platform_obstacles')], dim=0), dim = 0)
         dangerous_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('dangerous_obstacles')], dim=0), dim = 0)
         powerup_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('powerups')], dim=0), dim = 0)
+        coin_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('coins')], dim=0), dim = 0)
         fireball_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('fireballs')], dim=0), dim = 0)
-        
-        return torch.cat((enemy_rep, hard_obstacle_rep, platform_obstacle_rep, dangerous_obstacle_rep, powerup_rep, fireball_rep), dim=1)
+
+        return torch.cat((enemy_rep, hard_obstacle_rep, platform_obstacle_rep, dangerous_obstacle_rep, powerup_rep, coin_rep, fireball_rep), dim=1)
         
     
     def binaryWorldMaker_old(self, state, dictionary):

@@ -129,8 +129,8 @@ public class LevelScene extends Scene implements SpriteContext
                     case(-107):
                     case(-106):
                     case(15): // Sparcle, irrelevant
-                    case(34): // Coin, irrelevant for the current contest
-                        return 0;
+                    case(34):
+                        return 34;
                     case(-128):
                     case(-127):
                     case(-126):

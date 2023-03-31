@@ -49,6 +49,7 @@ public interface Environment
     public int getKillsByFire();
     public int getKillsByStomp();
     public int getKillsByShell();
+    public int getCoinsCollected();
 
     // For Server usage only, Java agents should use non-bitmap versions.
     public String getBitmapEnemiesObservation();

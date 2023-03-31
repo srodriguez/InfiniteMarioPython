@@ -85,6 +85,12 @@ public class ServerAgent extends BasicAIAgent implements Agent
         tmpData += " " + observation.getMarioFloatPos()[0]
                  + " " + observation.getMarioFloatPos()[1];
         
+        tmpData += " " + observation.getMarioMode();
+        
+        tmpData += " " + observation.getCoinsCollected();
+        
+        tmpData += " " + observation.getKillsTotal();
+        
         float[] enemiesFloatPoses = observation.getEnemiesFloatPos();
         for (int i = 0; i < enemiesFloatPoses.length; ++i)
             tmpData += " " + enemiesFloatPoses[i];
