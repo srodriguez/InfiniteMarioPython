@@ -166,8 +166,8 @@ class MichaelAgent(MarioAgent):
         extra_info[3] = self.action[3]
         extra_info[4] = self.action[4]
         
-        extra_info[5] = 1 if self.mayMarioJump else 0 # TODO: Is this value actually accurate?
-        extra_info[6] = 1 if self.isMarioOnGround else 0 # TODO: Is this value actually accurate?
+        #extra_info[5] = 1 if self.mayMarioJump else 0 # TODO: Is this value actually accurate?
+        #extra_info[6] = 1 if self.isMarioOnGround else 0 # TODO: Is this value actually accurate?
         
         extra_info[7] = self.marioFloats[0] - int(self.marioFloats[0])
         extra_info[8] = self.marioFloats[1] / 50.0
