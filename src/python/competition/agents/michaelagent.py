@@ -220,11 +220,11 @@ class MichaelAgent(MarioAgent):
                 print("Finished the level!")
 
             if self.lastMarioX is not None:
-                self.lastReward = (newMarioMode - self.marioMode) \
+                self.lastReward = 0.25 * (newMarioMode - self.marioMode) \
                     + (newHasWon - self.hasWon) \
-                    + 0.2 * (newEnemyKills - self.enemyKills) \
+                    + 0.1 * (newEnemyKills - self.enemyKills) \
                     + 0.1 * (newCoinsCollected - self.coinsCollected) \
-                    + 0.01 * (newMarioX - self.lastMarioX)
+                    + 0.02 * (newMarioX - self.lastMarioX)
                 
             self.lastMarioX = newMarioX
 
