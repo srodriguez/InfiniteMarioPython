@@ -214,6 +214,11 @@ class MichaelAgent(MarioAgent):
             newCoinsCollected = obs[5]
             newEnemyKills = obs[6]
             newHasWon = obs[7]
+
+            # Just to check if the level finish logic is correct
+            if newHasWon > 0 and self.hasWon == 0:
+                print("Finished the level!")
+
             if self.lastMarioX is not None:
                 self.lastReward = (newMarioMode - self.marioMode) \
                     + (newHasWon - self.hasWon) \
