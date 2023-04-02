@@ -218,8 +218,8 @@ class MichaelAgent(MarioAgent):
         else:
             newMarioX = obs[2][0]
             newMarioMode = obs[3]
-            newCoinsCollected = obs[4]
-            newEnemyKills = obs[5]
+            newCoinsCollected = obs[5]
+            newEnemyKills = obs[6]
             if self.lastMarioX is not None:
                 self.lastReward = (newMarioMode - self.marioMode) \
                     + 0.2 * (newEnemyKills - self.enemyKills) \
