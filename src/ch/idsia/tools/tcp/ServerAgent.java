@@ -93,6 +93,12 @@ public class ServerAgent extends BasicAIAgent implements Agent
         
         tmpData += " " + observation.getKillsTotal();
         
+        tmpData += " " + observation.hasWon();
+        
+        tmpData += " " + observation.getXa();
+        
+        tmpData += " " + observation.getYa();
+        
         float[] enemiesFloatPoses = observation.getEnemiesFloatPos();
         for (int i = 0; i < enemiesFloatPoses.length; ++i)
             tmpData += " " + enemiesFloatPoses[i];

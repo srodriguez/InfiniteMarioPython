@@ -114,6 +114,15 @@ def extractObservation(data):
         enemyKills = int(data[k])
         k += 1
 
+        hasWon = int(data[k])
+        k += 1
+
+        xa = float(data[k])
+        k += 1
+
+        ya = float(data[k])
+        k += 1
+
         while k < len(data):
             enemiesFloats.append(float(data[k]))
             k += 1
@@ -126,6 +135,6 @@ def extractObservation(data):
 #                   print ' ',
 #            print 
            
-        return (mayMarioJump, isMarioOnGround, marioFloats, marioMode, timeLeft, coinsCollected, enemyKills, enemiesFloats, levelScene, dummy)
+        return (mayMarioJump, isMarioOnGround, marioFloats, marioMode, timeLeft, coinsCollected, enemyKills, hasWon, xa, ya, enemiesFloats, levelScene, dummy)
     else:
         raise "Wrong format or corrupted observation..."

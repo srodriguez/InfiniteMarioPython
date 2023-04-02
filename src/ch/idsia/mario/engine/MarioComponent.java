@@ -375,6 +375,18 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
         return 0;
     }
     
+    public int hasWon() {
+    	return (mario.getStatus() == Mario.STATUS_WIN) ? 1 : 0;
+    }
+    
+    public float getXa() {
+    	return mario.xa;
+    }
+    
+    public float getYa() {
+    	return mario.ya;
+    }
+
     public byte[][] getCompleteObservation() {
         if (scene instanceof LevelScene)
             return ((LevelScene) scene).mergedObservation(this.ZLevelScene, this.ZLevelEnemies);
