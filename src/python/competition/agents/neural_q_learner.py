@@ -46,6 +46,7 @@ class NeuralQLearner(object):
         self.target_refresh_steps = agent_params["target_refresh_steps"]
         self.show_graphs = agent_params["show_graphs"] = True
         self.graph_save_freq = agent_params["graph_save_freq"]
+        self.save_model_freq = agent_params["save_model_freq"]
 
         self.mc_return_required = agent_params["mc_return_required"]
 
@@ -187,6 +188,9 @@ class NeuralQLearner(object):
 
             if self.show_extra_plots:
                 self.agent.save_plots(self.log_dir)
+
+        if self.numSteps > 0 and self.numSteps % self.save_model_freq == 0:
+            self.agent.save_model()
 
         self.numSteps += 1
 

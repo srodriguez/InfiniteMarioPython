@@ -12,6 +12,7 @@ class AgentDQN(object):
     def __init__(self, manager, agent_params):
 
         self.manager = manager
+        self.agent_params = agent_params
 
         self.device = torch.device("cuda" if self.manager.gpu >= 0 else "cpu")
 
@@ -98,3 +99,30 @@ class AgentDQN(object):
         self.manager.bestq[0] = q[action_selected]
 
         return action_selected
+
+
+    def save_model(self):
+
+        path = self.manager.log_dir + 'mario_' + str(self.manager.numSteps) + '.chk'
+        print('Saving model to ' + path + '...')
+
+        torch.save({
+            'model_state_dict': self.network.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict()
+            }, path)
+
+
+    def load_model(self, path):
+
+        print('Loading model from ' + path + '...')
+
+        checkpoint = torch.load(path, map_location=self.device)
+        
+        self.network = DQN(self.agent_params["dqn_config"])
+        self.target_network = DQN(self.agent_params["dqn_config"])
+
+        self.network.load_state_dict(checkpoint['model_state_dict'])
+        self.target_network.load_state_dict(self.network.state_dict())
+
+        self.optimizer = optim.Adam(self.network.parameters(), lr=self.agent_params["adam_lr"], betas=(self.agent_params["adam_beta1"], self.agent_params["adam_beta2"]), eps=self.agent_params["adam_eps"])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

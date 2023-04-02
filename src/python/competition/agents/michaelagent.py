@@ -139,6 +139,7 @@ class MichaelAgent(MarioAgent):
         agent_params["target_refresh_steps"] = 10000
         agent_params["show_graphs"] = True
         agent_params["graph_save_freq"] = 1000
+        agent_params["save_model_freq"] = 100000
 
         # For training methods that require the Monte Carlo return for each episode, set the below to True.
         agent_params["mc_return_required"] = False
