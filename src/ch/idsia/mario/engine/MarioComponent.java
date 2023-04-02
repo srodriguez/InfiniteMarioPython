@@ -369,6 +369,12 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
     	return mario.coins;
     }
 
+    public int getTimeLeft() {
+        if (scene instanceof LevelScene)
+            return ((LevelScene) scene).timeLeft;
+        return 0;
+    }
+    
     public byte[][] getCompleteObservation() {
         if (scene instanceof LevelScene)
             return ((LevelScene) scene).mergedObservation(this.ZLevelScene, this.ZLevelEnemies);

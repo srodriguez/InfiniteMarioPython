@@ -86,6 +86,8 @@ public class ServerAgent extends BasicAIAgent implements Agent
                  + " " + observation.getMarioFloatPos()[1];
         
         tmpData += " " + observation.getMarioMode();
+
+        tmpData += " " + observation.getTimeLeft();
         
         tmpData += " " + observation.getCoinsCollected();
         

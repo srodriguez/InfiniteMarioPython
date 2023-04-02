@@ -23,6 +23,7 @@ class MichaelAgent(MarioAgent):
     isMarioOnGround = None
     marioFloats = None
     marioMode = None
+    timeLeft = None
     coinsCollected = None
     enemyKills = None
     enemiesFloats = None
@@ -51,7 +52,7 @@ class MichaelAgent(MarioAgent):
         self.action[1] = 1
         self.actionStr = ""
         
-        self.extra_info_size = 11
+        self.extra_info_size = 12
         self.actionRepeat = 2 # 4
         self.stepsSinceNewAction = self.actionRepeat
 
@@ -175,6 +176,8 @@ class MichaelAgent(MarioAgent):
 
         extra_info[10] = self.marioMode
 
+        extra_info[11] = float(self.timeLeft) / 750.0 #  750.0 is just a hacky scale factor
+
         # This is a bit hacky... Ideally the agent should be able to learn this.
         # Can try taking it out later.
         #force_no_jump = False
@@ -208,7 +211,7 @@ class MichaelAgent(MarioAgent):
         """This method stores the observation inside the agent"""
         #marioMode = -1
         #print(obs)
-        if (len(obs) != 9):
+        if (len(obs) != 10):
             self.lastReward = 0 # TODO: Fix
             self.isEpisodeOver = True
             # print(self.lastMarioX) # Generally 2304 when the level gets finished
@@ -229,7 +232,7 @@ class MichaelAgent(MarioAgent):
             self.enemyKills = newEnemyKills
 
             self.isEpisodeOver = False
-            self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.marioMode, self.coinsCollected, self.enemyKills, self.enemiesFloats, self.levelScene, dummy = obs
+            self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.marioMode, self.timeLeft, self.coinsCollected, self.enemyKills, self.enemiesFloats, self.levelScene, dummy = obs
 
         # print("marioMode = " + str(self.marioMode) + ", coins collected = " + str(self.coinsCollected))
 

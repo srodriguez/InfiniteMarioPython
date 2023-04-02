@@ -105,6 +105,9 @@ def extractObservation(data):
         marioMode = int(data[k])
         k += 1
  
+        timeLeft = int(data[k])
+        k += 1
+
         coinsCollected = int(data[k])
         k += 1
 
@@ -123,6 +126,6 @@ def extractObservation(data):
 #                   print ' ',
 #            print 
            
-        return (mayMarioJump, isMarioOnGround, marioFloats, marioMode, coinsCollected, enemyKills, enemiesFloats, levelScene, dummy)
+        return (mayMarioJump, isMarioOnGround, marioFloats, marioMode, timeLeft, coinsCollected, enemyKills, enemiesFloats, levelScene, dummy)
     else:
         raise "Wrong format or corrupted observation..."
