@@ -15,8 +15,10 @@ class MarioEnvironment(TCPEnvironment):
     creaturesEnabled = True
     initMarioMode = 2
     levelSeed = 1
+    randomLevelSeed = False
     timeLimit = 100
     fastTCP = False
+    maxFPS = True
     
     # Other settings
     visualization = True
@@ -29,7 +31,10 @@ class MarioEnvironment(TCPEnvironment):
         return extractObservation(data)
 
     def reset(self):
-        self.levelSeed = random.randint(-999999, 999999)
+
+        if self.randomLevelSeed:
+            self.levelSeed = random.randint(-999999, 999999)
+
         argstring = "-ld %d -lt %d -mm %d -ls %d -tl %d " % (self.levelDifficulty,
                                                             self.levelType,
                                                             self.initMarioMode,
@@ -40,12 +45,19 @@ class MarioEnvironment(TCPEnvironment):
             argstring += "-pw off "
         else:
             argstring += "-pw on "
+
         if self.visualization:
             argstring += "-vis on "
         else:
             argstring += "-vis off "
+
         if self.fastTCP:
             argstring += "-fastTCP on"
 
-        self.client.sendData("reset -maxFPS on " + argstring + self.otherServerArgs + "\r\n")
+        if self.maxFPS:
+            argstring += "-maxFPS on"
+        else:
+            argstring += "-maxFPS off" 
+
+        self.client.sendData("reset " + argstring + self.otherServerArgs + "\r\n")
 

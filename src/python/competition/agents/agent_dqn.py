@@ -123,8 +123,8 @@ class AgentDQN(object):
 
         checkpoint = torch.load(path, map_location=self.device)
         
-        self.network = DQN(self.agent_params["dqn_config"])
-        self.target_network = DQN(self.agent_params["dqn_config"])
+        self.network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
+        self.target_network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
 
         self.network.load_state_dict(checkpoint['model_state_dict'])
         self.target_network.load_state_dict(self.network.state_dict())

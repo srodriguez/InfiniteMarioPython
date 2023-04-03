@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from agents.neural_q_learner import NeuralQLearner
 from agents.marioagent import MarioAgent
+from client.marioenvironment import MarioEnvironment
 
 __author__ = "Sergey Karakovskiy, sergey at idsia fullstop ch"
 __date__ = "$May 1, 2009 2:46:34 AM$"
@@ -14,6 +15,14 @@ class MichaelAgent(MarioAgent):
     """ In fact the Python twin of the
         corresponding Java ForwardAgent.
     """
+
+    demoSavedNet = False # True
+    savedNet = 'mario_4400000.chk'
+
+    MarioEnvironment.maxFPS = (not demoSavedNet)
+    MarioEnvironment.levelDifficulty = 2
+    MarioEnvironment.randomLevelSeed = True
+
     action = None
     actionStr = None
     KEY_JUMP = 3
@@ -34,7 +43,6 @@ class MichaelAgent(MarioAgent):
 
     trueJumpCounter = 0;
     trueSpeedCounter = 0;
-
 
     def reset(self):
         self.isEpisodeOver = False
@@ -130,18 +138,26 @@ class MichaelAgent(MarioAgent):
         agent_params["n_step_n"] = 3
         agent_params["max_reward"] = 10.0 # Use float("inf") for no clipping
         agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
-        agent_params["ep_start"] = 1
+
         agent_params["ep_end"] = 0.1
+
+        if self.demoSavedNet:
+            agent_params["ep_start"] = agent_params["ep_end"]
+            agent_params["learn_start"] = sys.maxsize
+            agent_params["save_model_freq"] = sys.maxsize
+        else:
+            agent_params["ep_start"] = 1
+            agent_params["learn_start"] = 12500 # 50000
+            agent_params["save_model_freq"] = 100000
+
         agent_params["ep_endt"] = 250000 # 200000 # 1000000
         agent_params["discount"] = 0.99
-        agent_params["learn_start"] = 12500 # 50000
         agent_params["update_freq"] = 4
         agent_params["n_replay"] = 1
         agent_params["minibatch_size"] = 32
         agent_params["target_refresh_steps"] = 10000
         agent_params["show_graphs"] = True
         agent_params["graph_save_freq"] = 1000
-        agent_params["save_model_freq"] = 100000
 
         transition_params = {}
         transition_params["agent_params"] = agent_params
@@ -150,6 +166,9 @@ class MichaelAgent(MarioAgent):
         transition_params["bufferSize"] = 512
 
         self.q_learner = NeuralQLearner(agent_params, transition_params)
+
+        if self.demoSavedNet:
+            self.q_learner.agent.load_model(os.path.dirname(os.path.realpath(__file__)) + '/saved_models/' + self.savedNet)
 
 
     def getAction(self):
