@@ -223,7 +223,7 @@ class MichaelAgent(MarioAgent):
                     + (newHasWon - self.hasWon) \
                     + 0.1 * (newEnemyKills - self.enemyKills) \
                     + 0.1 * (newCoinsCollected - self.coinsCollected) \
-                    + 0.02 * (newMarioX - self.lastMarioX)
+                    + 0.005 * (newMarioX - self.lastMarioX)
                 
             self.lastMarioX = newMarioX
 
