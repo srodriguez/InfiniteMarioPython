@@ -32,6 +32,7 @@ class NeuralQLearner(object):
         self.downsample_w = agent_params["downsample_w"]
         self.downsample_h = agent_params["downsample_h"]
         self.extra_info_size = agent_params["extra_info_size"]
+        self.n_step_n = agent_params["n_step_n"]
         self.max_reward = agent_params["max_reward"]
         self.min_reward = agent_params["min_reward"]
         self.ep_start = agent_params["ep_start"]
@@ -48,17 +49,15 @@ class NeuralQLearner(object):
         self.graph_save_freq = agent_params["graph_save_freq"]
         self.save_model_freq = agent_params["save_model_freq"]
 
-        self.mc_return_required = agent_params["mc_return_required"]
-
         self.in_channels = self.hist_len
 
         self.numSteps = 0
 
         # For inserting complete episodes into the experience replay cache
-        if self.mc_return_required:
-            self.current_episode = []
+        self.current_episode = []
             
         self.lastState = None
+        self.lastExtraInfo = None
         self.lastAction = None
         self.lastTerminal = False
 
@@ -88,29 +87,44 @@ class NeuralQLearner(object):
     def add_episode_to_cache(self):
 
         IDX_STATE = 0
-        IDX_ACTION = 1
-        IDX_EXTRINSIC_REWARD = 2
-        IDX_TERMINAL = 3
+        IDX_EXTRA_INFO = 1
+        IDX_ACTION = 2
+        IDX_EXTRINSIC_REWARD = 3
+        IDX_TERMINAL = 4
 
         ep_length = len(self.current_episode)
         ret = np.zeros((ep_length), dtype=np.float32)
+        ret_partial = np.zeros((ep_length), dtype=np.float32)
+
+        last_n_rewards_discounted = np.zeros((self.n_step_n), dtype=np.float32)
+        last_n_rewards_idx = 0
 
         i = ep_length - 1
+
         ret[i] = self.current_episode[i][IDX_EXTRINSIC_REWARD]
 
-        i = ep_length - 2
-        while i >= 0:
+        last_n_rewards_discounted[last_n_rewards_idx] = self.current_episode[i][IDX_EXTRINSIC_REWARD]
+        last_n_rewards_idx = (last_n_rewards_idx + 1) % self.n_step_n
+
+        ret_partial[i] = np.sum(last_n_rewards_discounted)
+
+        for i in reversed(range(0, ep_length - 1)):
+
             ret[i] = self.current_episode[i][IDX_EXTRINSIC_REWARD] + self.discount * ret[i + 1]
-            i -= 1
+
+            last_n_rewards_discounted = last_n_rewards_discounted * self.discount
+            last_n_rewards_discounted[last_n_rewards_idx] = self.current_episode[i][IDX_EXTRINSIC_REWARD]
+            last_n_rewards_idx = (last_n_rewards_idx + 1) % self.n_step_n
+
+            ret_partial[i] = np.sum(last_n_rewards_discounted)
 
         # Add episode to the cache
-        i = 0
-        while i < ep_length:
-            self.transitions.add(self.current_episode[i][IDX_STATE], self.current_episode[i][IDX_ACTION], self.current_episode[i][IDX_EXTRINSIC_REWARD], ret[i], self.current_episode[i][IDX_TERMINAL])
+        for i in range(0, ep_length):
+            self.transitions.add(self.current_episode[i][IDX_STATE], self.current_episode[i][IDX_EXTRA_INFO], self.current_episode[i][IDX_ACTION], self.current_episode[i][IDX_EXTRINSIC_REWARD], ret[i], ret_partial[i], self.current_episode[i][IDX_TERMINAL], ep_length - 1 - i)
             i = i + 1
 
         self.current_episode = []
-
+ 
 
     def handle_game_over(self):
 
@@ -159,17 +173,13 @@ class NeuralQLearner(object):
 
         # Store transition s, a, r, s'
         if self.lastState is not None:
-        
-            if self.mc_return_required:
-                self.current_episode.append((self.lastState, self.lastAction, reward, self.lastTerminal))
-            else:
-                self.transitions.add(self.lastState, self.lastAction, reward, 0.0, self.lastTerminal)
+            self.current_episode.append((self.lastState, self.lastExtraInfo, self.lastAction, reward, self.lastTerminal))
 
         if game_over:
             self.handle_game_over()
 
         # Necessary to process episode once lastTerminal == True so that each experience in the cache has a full return.
-        if self.lastTerminal and self.mc_return_required:
+        if self.lastTerminal:
             self.add_episode_to_cache()
 
         # Select action
@@ -200,6 +210,7 @@ class NeuralQLearner(object):
                 self.agent.learn()
 
         self.lastState = state.clone()
+        self.lastExtraInfo = extra_info.clone()
         self.lastAction = actionIndex
         self.lastTerminal = terminal
 

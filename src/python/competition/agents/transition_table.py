@@ -16,7 +16,7 @@ class TransitionTable(object):
         self.downsample_w = self.agent_params["downsample_w"]
         self.downsample_h = self.agent_params["downsample_h"]
         self.extra_info_size = self.agent_params["extra_info_size"]
-        
+        self.n_step_n = self.agent_params["n_step_n"]
         self.replay_size = transition_params["replay_size"]
         self.hist_spacing = transition_params["hist_spacing"]
         self.bufferSize = transition_params["bufferSize"]
@@ -37,7 +37,9 @@ class TransitionTable(object):
         self.a = np.zeros((self.replay_size), dtype=np.int32)
         self.r = np.zeros((self.replay_size), dtype=np.float32)
         self.ret = np.zeros((self.replay_size), dtype=np.float32)
+        self.ret_partial = np.zeros((self.replay_size), dtype=np.float32)
         self.t = np.zeros((self.replay_size), dtype=np.int32)
+        self.steps_until_term = np.zeros((self.replay_size), dtype=np.int32)
 
         self.recent_s = []
         self.recent_a = []
@@ -47,17 +49,19 @@ class TransitionTable(object):
         self.buf_a = np.zeros((self.bufferSize), dtype=np.int32)
         self.buf_r = np.zeros((self.bufferSize), dtype=np.float32)
         self.buf_ret = np.zeros((self.bufferSize), dtype=np.float32)
+        self.buf_ret_partial = np.zeros((self.bufferSize), dtype=np.float32)
         self.buf_term = np.zeros((self.bufferSize), dtype=np.int32)
+        self.buf_term_under_n = np.zeros((self.bufferSize), dtype=np.float32)
         self.buf_s = torch.empty(self.bufferSize, self.hist_len, self.downsample_w, self.downsample_h, dtype=torch.uint8).zero_()
-        self.buf_s2 = torch.empty(self.bufferSize, self.hist_len, self.downsample_w, self.downsample_h, dtype=torch.uint8).zero_()
+        self.buf_s_plus_n = torch.empty(self.bufferSize, self.hist_len, self.downsample_w, self.downsample_h, dtype=torch.uint8).zero_()
         self.buf_extra_info = torch.empty(self.bufferSize, self.hist_len, self.extra_info_size, dtype=torch.float).zero_()
-        self.buf_extra_info2 = torch.empty(self.bufferSize, self.hist_len, self.extra_info_size, dtype=torch.float).zero_()
+        self.buf_extra_info_plus_n = torch.empty(self.bufferSize, self.hist_len, self.extra_info_size, dtype=torch.float).zero_()
         
         if self.gpu >= 0:
             self.gpu_s  = self.buf_s.float().cuda()
-            self.gpu_s2 = self.buf_s2.float().cuda()
+            self.gpu_s_plus_n = self.buf_s_plus_n.float().cuda()
             self.gpu_extra_info = self.buf_extra_info.float().cuda()
-            self.gpu_extra_info2 = self.buf_extra_info.float().cuda()
+            self.gpu_extra_info_plus_n = self.buf_extra_info.float().cuda()
             
 
     def size(self):
@@ -72,24 +76,26 @@ class TransitionTable(object):
         self.buf_ind = 0
 
         for buf_ind in range(0, self.bufferSize):
-            s, extra_info, a, r, ret, s2, extra_info2, term = self.sample_one()
+            s, extra_info, a, r, ret, ret_partial, s_plus_n, extra_info_plus_n, term, term_under_n = self.sample_one()
             self.buf_s[buf_ind].copy_(s)
             self.buf_extra_info[buf_ind].copy_(extra_info)
             self.buf_a[buf_ind] = a
             self.buf_r[buf_ind] = r
             self.buf_ret[buf_ind] = ret
-            self.buf_s2[buf_ind].copy_(s2)
-            self.buf_extra_info2[buf_ind].copy_(extra_info2)
+            self.buf_ret_partial[buf_ind] = ret_partial
+            self.buf_s_plus_n[buf_ind].copy_(s_plus_n)
+            self.buf_extra_info_plus_n[buf_ind].copy_(extra_info_plus_n)
             self.buf_term[buf_ind] = term
+            self.buf_term_under_n[buf_ind] = term_under_n
 
         #self.buf_s = self.buf_s.float().div(255)
-        #self.buf_s2 = self.buf_s2.float().div(255)
+        #self.buf_s_plus_n = self.buf_s_plus_n.float().div(255)
 
         if self.gpu >= 0:
             self.gpu_s.copy_(self.buf_s)
-            self.gpu_s2.copy_(self.buf_s2)
+            self.gpu_s_plus_n.copy_(self.buf_s_plus_n)
             self.gpu_extra_info.copy_(self.buf_extra_info)
-            self.gpu_extra_info2.copy_(self.buf_extra_info2)
+            self.gpu_extra_info_plus_n.copy_(self.buf_extra_info_plus_n)
             
 
     def sample_one(self):
@@ -122,9 +128,9 @@ class TransitionTable(object):
         self.buf_ind = self.buf_ind + batch_size
 
         if self.gpu >=0:
-            return self.gpu_s[index:index2], self.gpu_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.gpu_s2[index:index2], self.gpu_extra_info2[index:index2], self.buf_term[index:index2]
+            return self.gpu_s[index:index2], self.gpu_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_ret_partial[index:index2], self.gpu_s_plus_n[index:index2], self.gpu_extra_info_plus_n[index:index2], self.buf_term[index:index2], self.buf_term_under_n[index:index2]
         else:
-            return self.buf_s[index:index2], self.buf_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_s2[index:index2], self.buf_extra_info2[index:index2], self.buf_term[index:index2]
+            return self.buf_s[index:index2], self.buf_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_ret_partial[index:index2], self.buf_s_plus_n[index:index2], self.buf_extra_info_plus_n[index:index2], self.buf_term[index:index2], self.buf_term_under_n[index:index2]
 
 
     def concatFrames(self, index, use_recent):
@@ -200,13 +206,17 @@ class TransitionTable(object):
     def get(self, index):
 
         s, extra_info = self.concatFrames(index, False)
-        s2, extra_info2 = self.concatFrames(index + 1, False)
+        s_plus_n, extra_info_plus_n = self.concatFrames(self.wrap_index(index + self.n_step_n), False)
         ar_index = index + self.recentMemSize - 1
 
-        return s, extra_info, self.a[ar_index], self.r[ar_index], self.ret[ar_index], s2, extra_info2, self.t[ar_index + 1]
+        term_under_n = 0
+        if (self.steps_until_term[ar_index] - 1) < self.n_step_n:
+            term_under_n = 1
+
+        return s, extra_info, self.a[ar_index], self.r[ar_index], self.ret[ar_index], self.ret_partial[ar_index], s_plus_n, extra_info_plus_n, self.t[ar_index + 1], term_under_n
 
 
-    def add(self, s, a, r, ret, term):
+    def add(self, s, extra_info, a, r, ret, ret_partial, term, steps_until_term):
 
         assert s is not None, 'State cannot be nil'
         assert a is not None, 'Action cannot be nil'
@@ -218,10 +228,13 @@ class TransitionTable(object):
 
         # Overwrite (s, a, r, t) at insertIndex
         self.s[self.insertIndex] = s.byte()
+        self.extra_info[self.insertIndex] = extra_info.clone()
         self.a[self.insertIndex] = a
         self.r[self.insertIndex] = r
         self.ret[self.insertIndex] = ret
+        self.ret_partial[self.insertIndex] = ret_partial
         self.t[self.insertIndex] = term_stored_value
+        self.steps_until_term[self.insertIndex] = steps_until_term
 
         # Increment until at full capacity
         if self.numEntries < self.replay_size:
@@ -258,4 +271,3 @@ class TransitionTable(object):
             del self.recent_s[0]
             del self.recent_t[0]
             del self.recent_extra_info[0]
-

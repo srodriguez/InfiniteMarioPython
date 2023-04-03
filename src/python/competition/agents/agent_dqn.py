@@ -17,6 +17,7 @@ class AgentDQN(object):
         self.device = torch.device("cuda" if self.manager.gpu >= 0 else "cpu")
 
         self.discount = agent_params["discount"]
+        self.n_step_n = agent_params["n_step_n"]
 
         self.network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
         self.target_network = DQN(self.manager.gpu, self.manager.in_channels, self.manager.hist_len * self.manager.extra_info_size, self.manager.n_actions)
@@ -34,18 +35,18 @@ class AgentDQN(object):
 
         assert self.manager.transitions.size() > self.manager.minibatch_size, 'Not enough transitions stored to learn'
 
-        s, extra_info, a, r, _, s2, extra_info2, term = self.manager.transitions.sample(self.manager.minibatch_size)
+        s, extra_info, a, _, _, ret_partial, s_plus_n, extra_info_plus_n, _, term_under_n = self.manager.transitions.sample(self.manager.minibatch_size)
 
-        r = torch.from_numpy(r).float().to(self.device)
-        term = torch.from_numpy(term).float().to(self.device)
+        ret_partial = torch.from_numpy(ret_partial).float().to(self.device)
+        term_under_n = torch.from_numpy(term_under_n).float().to(self.device)
         a_tens = torch.from_numpy(a).to(self.device).unsqueeze(1).long()
 
-        q_tp1 = self.target_network.forward(s2, extra_info2).detach()
+        q_tpn = self.target_network.forward(s_plus_n, extra_info_plus_n).detach()
 
         # Calculate q-values at time t
         q_values = self.network.forward(s, extra_info).gather(1, a_tens).squeeze()
 
-        value_tp1, _ = q_tp1.max(1)
+        value_tpn, _ = q_tpn.max(1)
 
         # An alternative is to calculate the greedy action first, then gather the Q-values.
         # This makes it easier to implemented Double DQN.
@@ -53,7 +54,7 @@ class AgentDQN(object):
         # greedy_act = greedy_act.unsqueeze(1)
         # value_tp1 = q_tp1.gather(1, greedy_act).squeeze()
         
-        target_overall = torch.ones_like(term).sub(term).mul(self.discount).mul(value_tp1).add(r)
+        target_overall = torch.ones_like(term_under_n).sub(term_under_n).mul(self.discount ** self.n_step_n).mul(value_tpn).add(ret_partial)
 
         error = q_values - target_overall
 

@@ -38,8 +38,11 @@ class DQN(nn.Module):
         #self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1).to(self.device)
         
         #self.fc1 = nn.Linear(in_features=7*7*64, out_features=512).to(self.device)
-        self.fc1 = nn.Linear(in_features=4*4*64 + extra_latent_size, out_features=512).to(self.device)
-        self.fc2 = nn.Linear(in_features=512, out_features=num_actions).to(self.device)
+        self.fc1_a = nn.Linear(in_features=4*4*64 + extra_latent_size, out_features=256).to(self.device)
+        self.fc1_v = nn.Linear(in_features=4*4*64 + extra_latent_size, out_features=256).to(self.device)
+
+        self.fc2_a = nn.Linear(in_features=256, out_features=num_actions).to(self.device)
+        self.fc2_v = nn.Linear(in_features=256, out_features=num_actions).to(self.device)
 
         # In the Nature paper the biases aren't zeroed, although it's probably good practice to zero them.
         # self.conv1.bias.data.fill_(0.0)
@@ -76,8 +79,14 @@ class DQN(nn.Module):
         
         x = torch.cat((x, extra_info.view(x.size(0), -1).to(self.device)), dim=1)
         
-        x = self.relu(self.fc1(x))
-        x = self.fc2(x)
+        a = self.relu(self.fc1_a(x))
+        a = self.relu(self.fc2_a(a))
+
+        v = self.relu(self.fc1_v(x))
+        v = self.relu(self.fc2_v(v))
+
+        x = v + a - a.mean(a.dim() - 1, keepdim=True)
+
         return x
         
         

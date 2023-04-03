@@ -126,6 +126,7 @@ class MichaelAgent(MarioAgent):
         agent_params["downsample_w"] = 22 # 84
         agent_params["downsample_h"] = 22 # 84
         agent_params["extra_info_size"] = self.extra_info_size
+        agent_params["n_step_n"] = 3
         agent_params["max_reward"] = 10.0 # Use float("inf") for no clipping
         agent_params["min_reward"] = -10.0 # Use float("-inf") for no clipping
         agent_params["ep_start"] = 1
@@ -140,9 +141,6 @@ class MichaelAgent(MarioAgent):
         agent_params["show_graphs"] = True
         agent_params["graph_save_freq"] = 1000
         agent_params["save_model_freq"] = 100000
-
-        # For training methods that require the Monte Carlo return for each episode, set the below to True.
-        agent_params["mc_return_required"] = False
 
         transition_params = {}
         transition_params["agent_params"] = agent_params
@@ -167,8 +165,8 @@ class MichaelAgent(MarioAgent):
         extra_info[3] = self.action[3]
         extra_info[4] = self.action[4]
         
-        #extra_info[5] = 1 if self.mayMarioJump else 0 # TODO: Is this value actually accurate?
-        #extra_info[6] = 1 if self.isMarioOnGround else 0 # TODO: Is this value actually accurate?
+        extra_info[5] = 1 if self.mayMarioJump else 0 # TODO: Is this value actually accurate?
+        extra_info[6] = 1 if self.isMarioOnGround else 0 # TODO: Is this value actually accurate?
         
         extra_info[7] = self.marioFloats[0] - int(self.marioFloats[0])
         extra_info[8] = self.marioFloats[1] / 50.0
