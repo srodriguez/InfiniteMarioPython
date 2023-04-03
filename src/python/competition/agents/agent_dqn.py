@@ -35,10 +35,11 @@ class AgentDQN(object):
 
         assert self.manager.transitions.size() > self.manager.minibatch_size, 'Not enough transitions stored to learn'
 
-        s, extra_info, a, _, _, ret_partial, s_plus_n, extra_info_plus_n, _, term_under_n = self.manager.transitions.sample(self.manager.minibatch_size)
+        s, extra_info, a, _, _, ret_partial, s_plus_n, extra_info_plus_n, _, term_under_n, game_won = self.manager.transitions.sample(self.manager.minibatch_size)
 
         ret_partial = torch.from_numpy(ret_partial).float().to(self.device)
         term_under_n = torch.from_numpy(term_under_n).float().to(self.device)
+        game_won = torch.from_numpy(game_won).float().to(self.device)
         a_tens = torch.from_numpy(a).to(self.device).unsqueeze(1).long()
 
         q_tpn = self.target_network.forward(s_plus_n, extra_info_plus_n).detach()
@@ -57,6 +58,9 @@ class AgentDQN(object):
         target_overall = torch.ones_like(term_under_n).sub(term_under_n).mul(self.discount ** self.n_step_n).mul(value_tpn).add(ret_partial)
 
         error = q_values - target_overall
+
+        # Don't update if the game was won
+        error = error.mul(torch.ones_like(game_won).sub(game_won))
 
         # Huber loss
         error.clamp_(-1.0, 1.0)

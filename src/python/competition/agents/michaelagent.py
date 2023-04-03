@@ -39,6 +39,7 @@ class MichaelAgent(MarioAgent):
     def reset(self):
         self.isEpisodeOver = False
         self.cumuIsEpisodeOver = False
+        self.cumuWon = False
         self.trueJumpCounter = 0;
         self.trueSpeedCounter = 0;
         self.lastMarioX = None
@@ -188,11 +189,14 @@ class MichaelAgent(MarioAgent):
         if self.stepsSinceNewAction >= self.actionRepeat:
             obs = self.levelScene
             r = self.cumuReward
-            a_idx = self.q_learner.perceive(r, obs, extra_info, self.cumuIsEpisodeOver, self.cumuIsEpisodeOver)
+            a_idx = self.q_learner.perceive(r, obs, extra_info, self.cumuIsEpisodeOver, self.cumuIsEpisodeOver, self.cumuWon)
             self.action = self.actions[a_idx]
             self.stepsSinceNewAction = 0
             self.cumuReward = 0
-            self.cumuIsEpisodeOver = False
+
+            if self.cumuIsEpisodeOver:
+                self.cumuIsEpisodeOver = False
+                self.cumuWon = False
 
         return self.action
         
@@ -213,7 +217,7 @@ class MichaelAgent(MarioAgent):
             newCoinsCollected = obs[5]
             newEnemyKills = obs[6]
             newHasWon = obs[7]
-
+            
             # Just to check if the level finish logic is correct
             if newHasWon > 0 and self.hasWon == 0:
                 print("Finished the level!")
@@ -231,6 +235,7 @@ class MichaelAgent(MarioAgent):
             self.mayMarioJump, self.isMarioOnGround, self.marioFloats, self.marioMode, self.timeLeft, self.coinsCollected, self.enemyKills, self.hasWon, self.xa, self.ya, self.enemiesFloats, self.levelScene, dummy = obs
 
         self.cumuIsEpisodeOver = (self.cumuIsEpisodeOver or self.isEpisodeOver)
+        self.cumuWon = (self.cumuWon or self.hasWon)
         
         if self.cumuIsEpisodeOver:
             self.lastMarioX = None

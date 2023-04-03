@@ -60,6 +60,7 @@ class NeuralQLearner(object):
         self.lastExtraInfo = None
         self.lastAction = None
         self.lastTerminal = False
+        self.lastGameWon = False
 
         if self.agent_type == 'dqn':
             self.agent = AgentDQN(self, agent_params)
@@ -91,6 +92,7 @@ class NeuralQLearner(object):
         IDX_ACTION = 2
         IDX_EXTRINSIC_REWARD = 3
         IDX_TERMINAL = 4
+        IDX_GAME_WON = 5
 
         ep_length = len(self.current_episode)
         ret = np.zeros((ep_length), dtype=np.float32)
@@ -120,7 +122,7 @@ class NeuralQLearner(object):
 
         # Add episode to the cache
         for i in range(0, ep_length):
-            self.transitions.add(self.current_episode[i][IDX_STATE], self.current_episode[i][IDX_EXTRA_INFO], self.current_episode[i][IDX_ACTION], self.current_episode[i][IDX_EXTRINSIC_REWARD], ret[i], ret_partial[i], self.current_episode[i][IDX_TERMINAL], ep_length - 1 - i)
+            self.transitions.add(self.current_episode[i][IDX_STATE], self.current_episode[i][IDX_EXTRA_INFO], self.current_episode[i][IDX_ACTION], self.current_episode[i][IDX_EXTRINSIC_REWARD], ret[i], ret_partial[i], self.current_episode[i][IDX_TERMINAL], self.current_episode[i][IDX_GAME_WON], ep_length - 1 - i)
             i = i + 1
 
         self.current_episode = []
@@ -148,7 +150,7 @@ class NeuralQLearner(object):
         self.episode_score_clipped = 0
 
 
-    def perceive(self, reward, rawstate, extra_info, terminal, game_over):
+    def perceive(self, reward, rawstate, extra_info, terminal, game_over, game_won):
 
         #rawstate = torch.from_numpy(rawstate)
         #state = self.preproc.forward(rawstate)
@@ -173,7 +175,7 @@ class NeuralQLearner(object):
 
         # Store transition s, a, r, s'
         if self.lastState is not None:
-            self.current_episode.append((self.lastState, self.lastExtraInfo, self.lastAction, reward, self.lastTerminal))
+            self.current_episode.append((self.lastState, self.lastExtraInfo, self.lastAction, reward, self.lastTerminal, self.lastGameWon))
 
         if game_over:
             self.handle_game_over()
@@ -213,6 +215,7 @@ class NeuralQLearner(object):
         self.lastExtraInfo = extra_info.clone()
         self.lastAction = actionIndex
         self.lastTerminal = terminal
+        self.lastGameWon = game_won
 
         if self.numSteps % self.target_refresh_steps == 0:
             self.agent.refresh_target()

@@ -39,6 +39,7 @@ class TransitionTable(object):
         self.ret = np.zeros((self.replay_size), dtype=np.float32)
         self.ret_partial = np.zeros((self.replay_size), dtype=np.float32)
         self.t = np.zeros((self.replay_size), dtype=np.int32)
+        self.game_won = np.zeros((self.replay_size), dtype=np.int32)
         self.steps_until_term = np.zeros((self.replay_size), dtype=np.int32)
 
         self.recent_s = []
@@ -52,6 +53,7 @@ class TransitionTable(object):
         self.buf_ret_partial = np.zeros((self.bufferSize), dtype=np.float32)
         self.buf_term = np.zeros((self.bufferSize), dtype=np.int32)
         self.buf_term_under_n = np.zeros((self.bufferSize), dtype=np.float32)
+        self.buf_game_won = np.zeros((self.bufferSize), dtype=np.int32)
         self.buf_s = torch.empty(self.bufferSize, self.hist_len, self.downsample_w, self.downsample_h, dtype=torch.uint8).zero_()
         self.buf_s_plus_n = torch.empty(self.bufferSize, self.hist_len, self.downsample_w, self.downsample_h, dtype=torch.uint8).zero_()
         self.buf_extra_info = torch.empty(self.bufferSize, self.hist_len, self.extra_info_size, dtype=torch.float).zero_()
@@ -76,7 +78,7 @@ class TransitionTable(object):
         self.buf_ind = 0
 
         for buf_ind in range(0, self.bufferSize):
-            s, extra_info, a, r, ret, ret_partial, s_plus_n, extra_info_plus_n, term, term_under_n = self.sample_one()
+            s, extra_info, a, r, ret, ret_partial, s_plus_n, extra_info_plus_n, term, term_under_n, game_won = self.sample_one()
             self.buf_s[buf_ind].copy_(s)
             self.buf_extra_info[buf_ind].copy_(extra_info)
             self.buf_a[buf_ind] = a
@@ -87,6 +89,7 @@ class TransitionTable(object):
             self.buf_extra_info_plus_n[buf_ind].copy_(extra_info_plus_n)
             self.buf_term[buf_ind] = term
             self.buf_term_under_n[buf_ind] = term_under_n
+            self.buf_game_won[buf_ind] = game_won
 
         #self.buf_s = self.buf_s.float().div(255)
         #self.buf_s_plus_n = self.buf_s_plus_n.float().div(255)
@@ -128,9 +131,9 @@ class TransitionTable(object):
         self.buf_ind = self.buf_ind + batch_size
 
         if self.gpu >=0:
-            return self.gpu_s[index:index2], self.gpu_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_ret_partial[index:index2], self.gpu_s_plus_n[index:index2], self.gpu_extra_info_plus_n[index:index2], self.buf_term[index:index2], self.buf_term_under_n[index:index2]
+            return self.gpu_s[index:index2], self.gpu_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_ret_partial[index:index2], self.gpu_s_plus_n[index:index2], self.gpu_extra_info_plus_n[index:index2], self.buf_term[index:index2], self.buf_term_under_n[index:index2], self.buf_game_won[index:index2]
         else:
-            return self.buf_s[index:index2], self.buf_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_ret_partial[index:index2], self.buf_s_plus_n[index:index2], self.buf_extra_info_plus_n[index:index2], self.buf_term[index:index2], self.buf_term_under_n[index:index2]
+            return self.buf_s[index:index2], self.buf_extra_info[index:index2], self.buf_a[index:index2], self.buf_r[index:index2], self.buf_ret[index:index2], self.buf_ret_partial[index:index2], self.buf_s_plus_n[index:index2], self.buf_extra_info_plus_n[index:index2], self.buf_term[index:index2], self.buf_term_under_n[index:index2], self.buf_game_won[index:index2]
 
 
     def concatFrames(self, index, use_recent):
@@ -213,10 +216,10 @@ class TransitionTable(object):
         if (self.steps_until_term[ar_index] - 1) < self.n_step_n:
             term_under_n = 1
 
-        return s, extra_info, self.a[ar_index], self.r[ar_index], self.ret[ar_index], self.ret_partial[ar_index], s_plus_n, extra_info_plus_n, self.t[ar_index + 1], term_under_n
+        return s, extra_info, self.a[ar_index], self.r[ar_index], self.ret[ar_index], self.ret_partial[ar_index], s_plus_n, extra_info_plus_n, self.t[ar_index + 1], term_under_n, self.game_won[ar_index + 1]
 
 
-    def add(self, s, extra_info, a, r, ret, ret_partial, term, steps_until_term):
+    def add(self, s, extra_info, a, r, ret, ret_partial, term, game_won, steps_until_term):
 
         assert s is not None, 'State cannot be nil'
         assert a is not None, 'Action cannot be nil'
@@ -226,6 +229,10 @@ class TransitionTable(object):
         if term:
             term_stored_value = 1
 
+        game_won_stored_value = 0
+        if game_won:
+            game_won_stored_value = 1
+
         # Overwrite (s, a, r, t) at insertIndex
         self.s[self.insertIndex] = s.byte()
         self.extra_info[self.insertIndex] = extra_info.clone()
@@ -234,6 +241,7 @@ class TransitionTable(object):
         self.ret[self.insertIndex] = ret
         self.ret_partial[self.insertIndex] = ret_partial
         self.t[self.insertIndex] = term_stored_value
+        self.game_won[self.insertIndex] = game_won_stored_value
         self.steps_until_term[self.insertIndex] = steps_until_term
 
         # Increment until at full capacity
