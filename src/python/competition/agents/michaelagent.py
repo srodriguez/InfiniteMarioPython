@@ -16,7 +16,8 @@ class MichaelAgent(MarioAgent):
         corresponding Java ForwardAgent.
     """
 
-    demoSavedNet = False # True
+    use_gpu = True
+    demoSavedNet = False
     savedNet = 'mario_4400000.chk'
 
     MarioEnvironment.maxFPS = (not demoSavedNet)
@@ -57,7 +58,6 @@ class MichaelAgent(MarioAgent):
 
     def __init__(self):
         """Constructor"""
-        self.use_gpu = True # False
         self.trueJumpCounter = 0
         self.trueSpeedCounter = 0
         self.action = numpy.zeros(5, int)
