@@ -21,7 +21,7 @@ class MichaelAgent(MarioAgent):
     savedNet = 'mario_4400000.chk'
 
     MarioEnvironment.maxFPS = (not demoSavedNet)
-    MarioEnvironment.levelDifficulty = 2
+    MarioEnvironment.levelDifficulty = 4
     MarioEnvironment.randomLevelSeed = True
 
     action = None
@@ -242,11 +242,11 @@ class MichaelAgent(MarioAgent):
                 print("Finished the level!")
 
             if self.lastMarioX is not None:
-                self.lastReward = 0.5 * min(newMarioMode - self.marioMode, 1.0) \
-                    + (newHasWon - self.hasWon) \
-                    + 0.1 * (newEnemyKills - self.enemyKills) \
-                    + 0.1 * (newCoinsCollected - self.coinsCollected) \
-                    + 0.002 * (newMarioX - self.lastMarioX)
+                self.lastReward = 0.75 * min(newMarioMode - self.marioMode, 1.0) \
+                    + 0.5 * (newHasWon - self.hasWon) \
+                    + 0.05 * (newEnemyKills - self.enemyKills) \
+                    + 0.05 * (newCoinsCollected - self.coinsCollected) \
+                    + 0.001 * (newMarioX - self.lastMarioX)
                 
             self.lastMarioX = newMarioX
 
