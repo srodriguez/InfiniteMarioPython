@@ -7,8 +7,6 @@ class DQN(nn.Module):
     def __init__(self, gpu, in_channels, extra_latent_size, num_actions):
         super(DQN, self).__init__()
 
-        self.unique_ids = None
-
         self.num_categories = 7 # enemies, hard obstacles, platform obstacles, dangerous obstacles, powerups, coins, fireballs
         
         # Michael note: See 'ZLevelMapElementGeneralization' in LevelScene.java (ch.idsia.mario.engine)
@@ -18,6 +16,10 @@ class DQN(nn.Module):
         # 20 is angry flower pot or cannot. I guess it's most similar to a hard obstacle, but maybe more like 'dangerous obstacle'?
         # 21 is question brick -- most similar to hard obstacle
 
+        ### Current List of observations tags - will have to change in the future to be dynamically generated via agent perception
+        self.listObservations = [2,3,4,5,6,7,8,9,10,12,13,16,21,246,245,20,14,15,34,25]
+        
+        """     
         self.dictionaryList ={
             'enemies':[2,3,4,5,6,7,8,9,10,12,13],
             'hard_obstacles':[16,21,246],
@@ -27,17 +29,14 @@ class DQN(nn.Module):
             'coins':[34],
             'fireballs':[25]
         }
+        """
 
-        #self.dictionaryList ={'enemies':[2,3,4,5,6,7,8,9,10,12],'obstacles':[245,246],'powerups':[16,21]}
-    
         self.device = torch.device("cuda" if gpu >= 0 else "cpu")
         
-        #self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=8, stride=4).to(self.device)
-        self.conv1 = nn.Conv2d(in_channels=in_channels*self.num_categories, out_channels=64, kernel_size=4, stride=2).to(self.device)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=2).to(self.device)
-        #self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1).to(self.device)
+        self.conv1 = nn.Conv2d(in_channels=in_channels*len(self.listObservations), out_channels=in_channels*self.num_categories, kernel_size=1, stride=1).to(self.device)
+        self.conv2 = nn.Conv2d(in_channels=in_channels*self.num_categories, out_channels=64, kernel_size=4, stride=2).to(self.device)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=2).to(self.device)
         
-        #self.fc1 = nn.Linear(in_features=7*7*64, out_features=512).to(self.device)
         self.fc1_a = nn.Linear(in_features=4*4*64 + extra_latent_size, out_features=256).to(self.device)
         self.fc1_v = nn.Linear(in_features=4*4*64 + extra_latent_size, out_features=256).to(self.device)
 
@@ -55,25 +54,16 @@ class DQN(nn.Module):
 
 
     def forward(self, x, extra_info):
-    
-        if self.unique_ids is None:
-            self.unique_ids = x.unique()
-        else:
-            new_ids = torch.cat((self.unique_ids, x.unique())).unique()
-            if new_ids.size()[0] > self.unique_ids.size()[0]:
-                #print("Old categories:")
-                #print(self.unique_ids)
-                #print("New categories:")
-                #print(new_ids)
-                #print(x[0][3])
-                #input()
-                self.unique_ids = new_ids
 
-        x = self.binaryWorldMaker(x, self.dictionaryList).float().to(self.device)
+        x = self.binaryWorldMaker(x).float().to(self.device)
 
-        x = self.relu(self.conv1(x))
+        # Calculate categories
+        x = self.conv1(x)#.permute((0, 2, 3, 1))
+        #x = nn.functional.softmax(x, dim=3).permute((0, 3, 1, 2))
+        x = nn.functional.softmax(x, dim=1)
+
         x = self.relu(self.conv2(x))
-        #x = self.relu(self.conv3(x))
+        x = self.relu(self.conv3(x))
 
         x = x.view(x.size(0), -1)
         
@@ -90,59 +80,11 @@ class DQN(nn.Module):
         return x
         
         
-    def binaryWorldMaker(self, state, dictionary):
+    def binaryWorldMaker(self, state):
     
-        enemy_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('enemies')], dim=0), dim = 0)
-        hard_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('hard_obstacles')], dim=0), dim = 0)
-        platform_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('platform_obstacles')], dim=0), dim = 0)
-        dangerous_obstacle_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('dangerous_obstacles')], dim=0), dim = 0)
-        powerup_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('powerups')], dim=0), dim = 0)
-        coin_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('coins')], dim=0), dim = 0)
-        fireball_rep = torch.any(torch.stack([torch.eq(state, aelem).logical_or_(torch.eq(state, aelem)) for aelem in dictionary.get('fireballs')], dim=0), dim = 0)
+        binary_reps = []
+        for obs_id in self.listObservations:
+            binary_reps.append(torch.eq(state, obs_id))
 
-        return torch.cat((enemy_rep, hard_obstacle_rep, platform_obstacle_rep, dangerous_obstacle_rep, powerup_rep, coin_rep, fireball_rep), dim=1)
+        return torch.cat(binary_reps, dim=1)
         
-    
-    def binaryWorldMaker_old(self, state, dictionary):
-    
-        state = state.cpu().numpy()
-        n_batch = state.shape[0]
-        n_channels_in = state.shape[1]
-        
-        # TODO: Un-hardcode the 22x22
-        output = np.zeros((n_batch, n_channels_in * self.num_categories, 22, 22), dtype=bool)
-        
-        for batch in range(n_batch):
-            for channel in range(n_channels_in):
-            
-                img = state[batch][channel]
-
-                # Enemies
-                counter = 0
-                for i in img:
-                    for e in dictionary.get('enemies'):
-                        idList = [v for v, val in enumerate(i) if val == e]
-                        for location in idList:
-                            output[batch][channel * self.num_categories][counter][location] = 1
-                    counter += 1
-
-                # Obstacles
-                counter = 0
-                for i in img:
-                    for e in dictionary.get('obstacles'):
-                        idList = [v for v, val in enumerate(i) if val == e]
-                        for location in idList:
-                            output[batch][channel * self.num_categories + 1][counter][location] = 1
-                    counter += 1
-
-                # Powerups
-                counter = 0
-                for i in img:
-                    for e in dictionary.get('powerups'):
-                        idList = [v for v, val in enumerate(i) if val == e]
-                        for location in idList:
-                            output[batch][channel * self.num_categories + 2][counter][location] = 1
-                    counter += 1
-        
-        return torch.from_numpy(output)
-

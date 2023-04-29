@@ -131,7 +131,7 @@ class MichaelAgent(MarioAgent):
         agent_params["gpu"] = 0 if self.use_gpu else -1
         agent_params["n_actions"] = len(self.actions)
         agent_params["use_rgb_for_raw_state"] = False
-        agent_params["hist_len"] = 2 # 4
+        agent_params["hist_len"] = 1 # 2 # 4
         agent_params["downsample_w"] = 22 # 84
         agent_params["downsample_h"] = 22 # 84
         agent_params["extra_info_size"] = self.extra_info_size
