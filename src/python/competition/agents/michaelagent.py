@@ -18,7 +18,7 @@ class MichaelAgent(MarioAgent):
 
     use_gpu = True
     demoSavedNet = False
-    savedNet = 'mario_4400000.chk'
+    savedNet = 'mario_30000000.chk'
 
     MarioEnvironment.maxFPS = (not demoSavedNet)
     MarioEnvironment.levelDifficulty = 4
@@ -147,7 +147,7 @@ class MichaelAgent(MarioAgent):
             agent_params["save_model_freq"] = sys.maxsize
         else:
             agent_params["ep_start"] = 1
-            agent_params["learn_start"] = 12500 # 50000
+            agent_params["learn_start"] = 50000 # Was 12500 when training original net
             agent_params["save_model_freq"] = 100000
 
         agent_params["ep_endt"] = 250000 # 200000 # 1000000
