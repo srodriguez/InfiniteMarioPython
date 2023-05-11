@@ -1,6 +1,8 @@
 # Python Agent for Infinite Mario
 
-Press 'v' in the Mario window that appears to toggle visualisation. (See src/ch/idsia/ai/agents/human/CheaterKeyboardAgent.java) for a list of all the keyboard instructions.
+To launch a Python-based agent, first you need to start Infinite Mario in server mode, then run the agent's Python script.
+
+## Running the Infinite Mario server from Eclipse
 
 Steps to get running:
 * Download this repo.
@@ -13,7 +15,23 @@ Steps to get running:
 <img src="doc/run_config_1.png" width="800" height="377" />
 <img src="doc/run_config_2.png" width="800" height="508" />
 
+## Installing the Python Dependencies via Anaconda and pip
+
+```
+conda create -n py36 python=3.6
+conda activate py36
+pip3 install torch torchvision torchaudio
+pip install future
+pip install matplotlib
+pip install opencv-python
+pip install prettytable
+```
+
+## Running the agent's Python script
+
 * Open a terminal in the 'src' directory.
 * Activate a Python 2 conda environment if necessary.
 * ```python python/competition/ipymario.py ```
 * This should launch the custom 'MichaelAgent' I've created that randomly runs left and right.
+
+Press 'v' in the Mario window that appears to toggle visualisation. (See src/ch/idsia/ai/agents/human/CheaterKeyboardAgent.java) for a list of all the keyboard instructions.
