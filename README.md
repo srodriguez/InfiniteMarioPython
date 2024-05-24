@@ -23,7 +23,7 @@ OS name: "mac os x", version: "14.4.1", arch: "aarch64", family: "mac"
 
 To boot the server, run in the terminal:
 
-`$ mvn clean package exec:java`
+`mvn clean package exec:java`
 
 ## Running the agent's Python script
 
@@ -41,10 +41,7 @@ Agent code is in `client/python/competition`
 
 In the ternimal:
 
-```sh
-$ pipenv run python ipymario.py
-
-```
+`pipenv run python ipymario.py`
 
 - This should launch the ForwardAgent
 
