@@ -1,5 +1,5 @@
-src/python/competition/agents/results
-classes
+client/python/competition/agents/results
+target
 
 *.pyc
 
@@ -28,3 +28,4 @@ classes
 hs_err_pid*
 replay_pid*
 
+.DS_Store

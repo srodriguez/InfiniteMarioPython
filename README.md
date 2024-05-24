@@ -2,50 +2,48 @@
 
 This is a refactor of the original repository [InfiniteMarioPython](https://github.com/mchldann/InfiniteMarioPython)
 
-
-
-## Running the Server
+## Server
 
 ### Requisite
 
-- Java
-- Maven
+- Java 1.8+
+- Maven 3
 
+Tested with:
 
-# Python Agent for Infinite Mario
+> Apache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)
+> Maven home: /opt/homebrew/Cellar/maven/3.9.6/libexec
+> Java version: 17.0.10, vendor: Eclipse Adoptium, runtime: /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+> Default locale: en_AU, platform encoding: UTF-8
+> OS name: "mac os x", version: "14.4.1", arch: "aarch64", family: "mac"
 
-To launch a Python-based agent, first you need to start Infinite Mario in server mode, then run the agent's Python script.
+### Running the Server
 
-## Running the Infinite Mario server from Eclipse
+To boot the server, run in the terminal:
 
-Steps to get running:
-* Download this repo.
-* Install Eclipse. I've tested the instructions with this version:
-<img src="doc/eclipse_version.png" width="450" height="260" />
-
-* Open the project in Eclipse via File -> Open Projects from File System... Just select the main folder (InfiniteMarioPython), not the 'src' subdirectory or anything else.
-* Run the server from Eclipse by specifying '-server on' in the program arguments. One issue I had is that the default working directory (in the second screenshot below) was somehow set incorrectly. Overriding it by clicking *Other* and specifying the "classes" subdirectory solved the problem.
-
-<img src="doc/run_config_1.png" width="800" height="377" />
-<img src="doc/run_config_2.png" width="800" height="508" />
-
-## Installing the Python Dependencies via Anaconda and pip
-
-```
-conda create -n py36 python=3.6
-conda activate py36
-pip3 install torch torchvision torchaudio
-pip install future
-pip install matplotlib
-pip install opencv-python
-pip install prettytable
-```
+`$ mvn clean package exec:java`
 
 ## Running the agent's Python script
 
-* Open a terminal in the 'src' directory.
-* Activate a Python 2 conda environment if necessary.
-* ```python python/competition/ipymario.py ```
-* This should launch the custom 'MichaelAgent' I've created that randomly runs left and right.
+Agent code is in `client/python/competition`
+
+### Requisite
+
+- Pipenv
+
+### Installing dependencies
+
+`pipenv install`
+
+### Running the agent
+
+In the ternimal:
+
+```sh
+$ pipenv run python ipymario.py
+
+```
+
+- This should launch the ForwardAgent
 
 Press 'v' in the Mario window that appears to toggle visualisation. (See src/ch/idsia/ai/agents/human/CheaterKeyboardAgent.java) for a list of all the keyboard instructions.
