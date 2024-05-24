@@ -5,6 +5,7 @@ import datetime
 import sys
 
 from agents.forwardagent import ForwardAgent
+from agents.forwardagentseb import SebForwardAgent
 from agents.forwardrandomagent import ForwardRandomAgent
 from agents.michaelagent import MichaelAgent
 from experiments.episodicexperiment import EpisodicExperiment
@@ -17,7 +18,8 @@ from tasks.mariotask import MarioTask
 
 
 def main():
-    agent = ForwardAgent()
+    # agent = MichaelAgent()
+    agent = SebForwardAgent()
     task = MarioTask(agent.name)
     exp = EpisodicExperiment(task, agent)
     print("Task Ready")
