@@ -11,11 +11,13 @@ This is a refactor of the original repository [InfiniteMarioPython](https://gith
 
 Tested with:
 
-> Apache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)
-> Maven home: /opt/homebrew/Cellar/maven/3.9.6/libexec
-> Java version: 17.0.10, vendor: Eclipse Adoptium, runtime: /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
-> Default locale: en_AU, platform encoding: UTF-8
-> OS name: "mac os x", version: "14.4.1", arch: "aarch64", family: "mac"
+```
+Apache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)
+Maven home: /opt/homebrew/Cellar/maven/3.9.6/libexec
+Java version: 17.0.10, vendor: Eclipse Adoptium, runtime: /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+Default locale: en_AU, platform encoding: UTF-8
+OS name: "mac os x", version: "14.4.1", arch: "aarch64", family: "mac"
+```
 
 ### Running the Server
 
