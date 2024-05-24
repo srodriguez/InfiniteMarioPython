@@ -1,3 +1,17 @@
+# Infinite Mario Server and Agent Samples
+
+This is a refactor of the original repository [InfiniteMarioPython](https://github.com/mchldann/InfiniteMarioPython)
+
+
+
+## Running the Server
+
+### Requisite
+
+- Java
+- Maven
+
+
 # Python Agent for Infinite Mario
 
 To launch a Python-based agent, first you need to start Infinite Mario in server mode, then run the agent's Python script.
